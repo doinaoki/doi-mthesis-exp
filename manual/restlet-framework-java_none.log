@@ -1,0 +1,138 @@
+trigger(1): getDataServiceVersion -> getClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 406, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 139, 'FieldName']
+2: IDMATCH EXMATCH ['getMaxDataServiceVersion', 'getMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+3: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+4: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+5: ['dataServiceUri', 'clientUri', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 90, 'VariableName']
+6: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 171, 'ParameterName']
+7: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+8: IDMATCH EXMATCH ['setMaxDataServiceVersion', 'setMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+9: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 155, 'ParameterName']
+10: IDMATCH EXMATCH ['setDataServiceVersion', 'setClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+11: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 11 recommends
+
+trigger(2): getETag -> getTag, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 417, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['eClass', 'class', 'incubator/org.restlet.ext.emf/src/org/restlet/ext/emf/internal/EmfHtmlWriter.java', 76, 'VariableName']
+2: IDMATCH EXMATCH ['eTag', 'tag', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 930, 'VariableName']
+3: ['eAndCs', 'andCs', 'modules/org.restlet.ext.jaxrs/src/org/restlet/ext/jaxrs/JaxRsRestlet.java', 896, 'VariableName']
+4: ['getDatastoreETag', 'getDatastoreTag', 'modules/org.restlet.test/src/org/restlet/test/jaxrs/services/tests/RequestTest.java', 99, 'MethodName']
+5: ['eWithMethod', 'withMethod', 'modules/org.restlet.ext.jaxrs/src/org/restlet/ext/jaxrs/JaxRsRestlet.java', 1080, 'VariableName']
+total 5 recommends
+
+trigger(3): getMaxDataServiceVersion -> getMaxClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 488, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 139, 'FieldName']
+2: IDMATCH EXMATCH ['getDataServiceVersion', 'getClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+3: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+4: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+5: ['dataServiceUri', 'clientUri', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 90, 'VariableName']
+6: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 171, 'ParameterName']
+7: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+8: IDMATCH EXMATCH ['setMaxDataServiceVersion', 'setMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+9: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 155, 'ParameterName']
+10: IDMATCH EXMATCH ['setDataServiceVersion', 'setClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+11: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 11 recommends
+
+trigger(4): dataServiceVersion -> clientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 786, ParameterName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 139, 'FieldName']
+2: IDMATCH EXMATCH ['getMaxDataServiceVersion', 'getMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+3: IDMATCH EXMATCH ['getDataServiceVersion', 'getClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+4: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+5: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+6: ['dataServiceUri', 'clientUri', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 90, 'VariableName']
+7: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 171, 'ParameterName']
+8: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+9: IDMATCH EXMATCH ['setMaxDataServiceVersion', 'setMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+10: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 155, 'ParameterName']
+11: IDMATCH EXMATCH ['setDataServiceVersion', 'setClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+total 11 recommends
+
+trigger(5): setDataServiceVersion -> setClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 778, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 139, 'FieldName']
+2: IDMATCH EXMATCH ['getMaxDataServiceVersion', 'getMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+3: IDMATCH EXMATCH ['getDataServiceVersion', 'getClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+4: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+5: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+6: ['dataServiceUri', 'clientUri', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 90, 'VariableName']
+7: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 171, 'ParameterName']
+8: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+9: IDMATCH EXMATCH ['setMaxDataServiceVersion', 'setMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+10: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 155, 'ParameterName']
+11: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 11 recommends
+
+trigger(6): maxDataServiceVersion -> maxClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 818, ParameterName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 139, 'FieldName']
+2: IDMATCH EXMATCH ['getMaxDataServiceVersion', 'getMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+3: IDMATCH EXMATCH ['getDataServiceVersion', 'getClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+4: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+5: ['dataServiceUri', 'clientUri', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 90, 'VariableName']
+6: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 171, 'ParameterName']
+7: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+8: IDMATCH EXMATCH ['setMaxDataServiceVersion', 'setMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+9: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 155, 'ParameterName']
+10: IDMATCH EXMATCH ['setDataServiceVersion', 'setClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+11: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 11 recommends
+
+trigger(7): setMaxDataServiceVersion -> setMaxClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 810, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 139, 'FieldName']
+2: IDMATCH EXMATCH ['getMaxDataServiceVersion', 'getMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+3: IDMATCH EXMATCH ['getDataServiceVersion', 'getClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+4: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+5: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+6: ['dataServiceUri', 'clientUri', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 90, 'VariableName']
+7: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 171, 'ParameterName']
+8: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+9: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 155, 'ParameterName']
+10: IDMATCH EXMATCH ['setDataServiceVersion', 'setClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+11: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 11 recommends
+
+trigger(8): eTag -> tag, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 930, VariableName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['eClass', 'class', 'incubator/org.restlet.ext.emf/src/org/restlet/ext/emf/internal/EmfHtmlWriter.java', 76, 'VariableName']
+2: IDMATCH EXMATCH ['getETag', 'getTag', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 417, 'MethodName']
+3: ['eAndCs', 'andCs', 'modules/org.restlet.ext.jaxrs/src/org/restlet/ext/jaxrs/JaxRsRestlet.java', 896, 'VariableName']
+4: ['getDatastoreETag', 'getDatastoreTag', 'modules/org.restlet.test/src/org/restlet/test/jaxrs/services/tests/RequestTest.java', 99, 'MethodName']
+5: ['eWithMethod', 'withMethod', 'modules/org.restlet.ext.jaxrs/src/org/restlet/ext/jaxrs/JaxRsRestlet.java', 1080, 'VariableName']
+total 5 recommends
+
+trigger(9): dataServiceVersion -> clientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 105, FieldName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 139, 'FieldName']
+2: IDMATCH EXMATCH ['getMaxDataServiceVersion', 'getMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+3: IDMATCH EXMATCH ['getDataServiceVersion', 'getClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+4: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+5: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+6: ['dataServiceUri', 'clientUri', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 90, 'VariableName']
+7: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 171, 'ParameterName']
+8: IDMATCH EXMATCH ['setMaxDataServiceVersion', 'setMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+9: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 155, 'ParameterName']
+10: IDMATCH EXMATCH ['setDataServiceVersion', 'setClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+11: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 11 recommends
+
+trigger(10): maxDataServiceVersion -> maxClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 120, FieldName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 139, 'FieldName']
+2: IDMATCH EXMATCH ['getMaxDataServiceVersion', 'getMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+3: IDMATCH EXMATCH ['getDataServiceVersion', 'getClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+4: IDMATCH EXMATCH ['maxDataServiceVersion', 'maxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+5: ['dataServiceUri', 'clientUri', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 90, 'VariableName']
+6: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 171, 'ParameterName']
+7: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+8: IDMATCH EXMATCH ['setMaxDataServiceVersion', 'setMaxClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+9: ['dataServiceRef', 'clientRef', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Generator.java', 155, 'ParameterName']
+10: IDMATCH EXMATCH ['setDataServiceVersion', 'setClientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+11: IDMATCH EXMATCH ['dataServiceVersion', 'clientVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 11 recommends
+

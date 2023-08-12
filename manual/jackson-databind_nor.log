@@ -1,0 +1,104 @@
+trigger(1): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/IndexedListSerializer.java, 65, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(2): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/IndexedStringListSerializer.java, 108, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(3): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/IndexedStringListSerializer.java, 126, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(4): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/IndexedStringListSerializer.java, 136, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(5): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/IndexedStringListSerializer.java, 149, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(6): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/IndexedStringListSerializer.java, 167, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(7): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/IteratorSerializer.java, 53, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(8): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/IteratorSerializer.java, 65, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(9): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/StringCollectionSerializer.java, 115, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(10): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/impl/StringCollectionSerializer.java, 133, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(11): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSetSerializer.java, 48, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(12): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSetSerializer.java, 61, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(13): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/std/IterableSerializer.java, 62, ParameterName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(14): testWriteSingleElemArrayUnwrapped -> testWithArrayTypes, src/test/java/com/fasterxml/jackson/databind/struct/FormatFeaturesTest.java, 43, MethodName, 9ed3abf2f233a789c28f863221f3da6681b9cf86
+recommend list:
+total 0 recommends
+
+trigger(1): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/JsonSerializer.java, 104, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(2): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/JsonSerializer.java, 134, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(3): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java, 533, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(4): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java, 589, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(5): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java, 604, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(6): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java, 661, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(7): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/BeanPropertyWriter.java, 772, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(8): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java, 149, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(9): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java, 162, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(10): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/std/ToStringSerializer.java, 59, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(11): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/std/ToStringSerializer.java, 77, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+
+trigger(12): jgen -> gen, src/main/java/com/fasterxml/jackson/databind/ser/std/UUIDSerializer.java, 40, ParameterName, 377aab01b89b2468856d3314cc389c5e3c2cde77
+recommend list:
+total 0 recommends
+

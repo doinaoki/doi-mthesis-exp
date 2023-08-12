@@ -1,0 +1,50 @@
+trigger(1): initAudioApp -> simpleInitApp, engine/src/test/jme3test/audio/TestAmbient.java, 52, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: ['updateAudioApp', 'updateApp', 'engine/src/test/jme3test/audio/TestAmbient.java', 76, 'MethodName']
+total 1 recommends
+
+trigger(2): initAudioApp -> simpleInitApp, engine/src/test/jme3test/audio/TestDoppler.java, 67, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: IDMATCH ['updateAudioApp', 'updateApp', 'engine/src/test/jme3test/audio/TestDoppler.java', 85, 'MethodName']
+total 1 recommends
+
+trigger(3): updateAudioApp -> simpleUpdate, engine/src/test/jme3test/audio/TestDoppler.java, 85, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: IDMATCH ['initAudioApp', 'init', 'engine/src/test/jme3test/audio/TestDoppler.java', 67, 'MethodName']
+total 1 recommends
+
+trigger(4): initAudioApp -> simpleInitApp, engine/src/test/jme3test/audio/TestMusicStreaming.java, 49, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: ['updateAudioApp', 'updateApp', 'engine/src/test/jme3test/audio/TestMusicStreaming.java', 45, 'MethodName']
+total 1 recommends
+
+trigger(5): initAudioApp -> simpleInitApp, engine/src/test/jme3test/audio/TestOgg.java, 47, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: IDMATCH ['updateAudioApp', 'updateApp', 'engine/src/test/jme3test/audio/TestOgg.java', 54, 'MethodName']
+total 1 recommends
+
+trigger(6): updateAudioApp -> simpleUpdate, engine/src/test/jme3test/audio/TestOgg.java, 54, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: IDMATCH ['initAudioApp', 'init', 'engine/src/test/jme3test/audio/TestOgg.java', 47, 'MethodName']
+total 1 recommends
+
+trigger(7): initAudioApp -> simpleInitApp, engine/src/test/jme3test/audio/TestReverb.java, 52, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: IDMATCH ['updateAudioApp', 'updateApp', 'engine/src/test/jme3test/audio/TestReverb.java', 65, 'MethodName']
+total 1 recommends
+
+trigger(8): updateAudioApp -> simpleUpdate, engine/src/test/jme3test/audio/TestReverb.java, 65, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: IDMATCH ['initAudioApp', 'init', 'engine/src/test/jme3test/audio/TestReverb.java', 52, 'MethodName']
+total 1 recommends
+
+trigger(9): updateAudioApp -> simpleUpdate, engine/src/test/jme3test/audio/TestWav.java, 54, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: IDMATCH ['initAudioApp', 'init', 'engine/src/test/jme3test/audio/TestWav.java', 64, 'MethodName']
+total 1 recommends
+
+trigger(10): initAudioApp -> simpleInitApp, engine/src/test/jme3test/audio/TestWav.java, 64, MethodName, 1acd324d02a180f4b2d91699020752a1bd9422fc
+recommend list:
+1: IDMATCH ['updateAudioApp', 'updateApp', 'engine/src/test/jme3test/audio/TestWav.java', 54, 'MethodName']
+total 1 recommends
+

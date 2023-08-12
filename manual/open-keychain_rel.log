@@ -1,0 +1,70 @@
+trigger(1): bCanEdit -> canBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java, 199, ParameterName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH EXMATCH ['mCanEdit', 'mCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+2: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+3: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+4: IDMATCH EXMATCH ['bCanEdit', 'canBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+5: IDMATCH EXMATCH ['bCanEdit', 'canBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+6: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+total 6 recommends
+
+trigger(2): setCanEdit -> setCanBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java, 199, MethodName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+2: IDMATCH EXMATCH ['mCanEdit', 'mCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+3: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+4: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+5: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+6: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+total 6 recommends
+
+trigger(3): bCanEdit -> canBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java, 110, ParameterName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH EXMATCH ['mCanEdit', 'mCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+2: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+3: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+4: IDMATCH EXMATCH ['bCanEdit', 'canBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+5: IDMATCH EXMATCH ['bCanEdit', 'canBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+6: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+total 6 recommends
+
+trigger(4): setCanEdit -> setCanBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java, 110, MethodName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH EXMATCH ['mCanEdit', 'mCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+2: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+3: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+4: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+5: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+6: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+total 6 recommends
+
+trigger(5): mCanEdit -> mCanBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java, 67, FieldName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+2: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+3: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+4: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+5: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+6: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+total 6 recommends
+
+trigger(6): bCanEdit -> canBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java, 55, ParameterName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+2: IDMATCH EXMATCH ['mCanEdit', 'mCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+3: IDMATCH EXMATCH ['bCanEdit', 'canBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+4: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+5: IDMATCH EXMATCH ['bCanEdit', 'canBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+6: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+total 6 recommends
+
+trigger(7): setCanEdit -> setCanBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java, 55, MethodName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+2: IDMATCH EXMATCH ['mCanEdit', 'mCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+3: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+4: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+5: IDMATCH ['bCanEdit', 'bCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+6: IDMATCH EXMATCH ['setCanEdit', 'setCanBeEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+total 6 recommends
+

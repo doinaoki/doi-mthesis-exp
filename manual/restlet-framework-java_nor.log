@@ -1,0 +1,110 @@
+trigger(1): getDataServiceVersion -> getClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 406, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH ['getMaxDataServiceVersion', 'getMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+2: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+3: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+4: IDMATCH ['setMaxDataServiceVersion', 'setMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+5: IDMATCH ['setDataServiceVersion', 'setClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+6: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+7: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 7 recommends
+
+trigger(2): getETag -> getTag, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 417, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH EXMATCH ['eTag', 'tag', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 930, 'VariableName']
+2: ['updateEntity', 'update', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 908, 'MethodName']
+3: ['deleteEntity', 'delete', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 356, 'MethodName']
+4: ['deleteEntity', 'delete', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 331, 'MethodName']
+5: ['addEntity', 'add', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 148, 'MethodName']
+6: ['entitySetName', 'setName', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 158, 'ParameterName']
+7: ['entitySubpath', 'subpath', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 363, 'ParameterName']
+total 7 recommends
+
+trigger(3): getMaxDataServiceVersion -> getMaxClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 488, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH ['getDataServiceVersion', 'getClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+2: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+3: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+4: IDMATCH ['setMaxDataServiceVersion', 'setMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+5: IDMATCH ['setDataServiceVersion', 'setClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+6: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+7: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 7 recommends
+
+trigger(4): dataServiceVersion -> clientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 786, ParameterName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+2: IDMATCH ['setDataServiceVersion', 'setClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+3: IDMATCH ['getMaxDataServiceVersion', 'getMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+4: IDMATCH ['getDataServiceVersion', 'getClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+5: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+6: IDMATCH ['setMaxDataServiceVersion', 'setMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+7: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+total 7 recommends
+
+trigger(5): setDataServiceVersion -> setClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 778, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH ['getMaxDataServiceVersion', 'getMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+2: IDMATCH ['getDataServiceVersion', 'getClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+3: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+4: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+5: IDMATCH ['setMaxDataServiceVersion', 'setMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+6: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+7: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+total 7 recommends
+
+trigger(6): maxDataServiceVersion -> maxClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 818, ParameterName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+2: IDMATCH ['setMaxDataServiceVersion', 'setMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+3: IDMATCH ['getMaxDataServiceVersion', 'getMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+4: IDMATCH ['getDataServiceVersion', 'getClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+5: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+6: IDMATCH ['setDataServiceVersion', 'setClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+7: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 7 recommends
+
+trigger(7): setMaxDataServiceVersion -> setMaxClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 810, MethodName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH ['getMaxDataServiceVersion', 'getMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+2: IDMATCH ['getDataServiceVersion', 'getClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+3: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+4: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+5: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+6: IDMATCH ['setDataServiceVersion', 'setClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+7: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 7 recommends
+
+trigger(8): eTag -> tag, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 930, VariableName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH EXMATCH ['getETag', 'getTag', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 417, 'MethodName']
+2: ['updateEntity', 'update', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 908, 'MethodName']
+3: ['deleteEntity', 'delete', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 356, 'MethodName']
+4: ['deleteEntity', 'delete', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 331, 'MethodName']
+5: ['addEntity', 'add', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 148, 'MethodName']
+6: ['entitySetName', 'setName', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 158, 'ParameterName']
+7: ['entitySubpath', 'subpath', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 363, 'ParameterName']
+total 7 recommends
+
+trigger(9): dataServiceVersion -> clientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 105, FieldName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH ['getMaxDataServiceVersion', 'getMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+2: IDMATCH ['getDataServiceVersion', 'getClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+3: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 120, 'FieldName']
+4: IDMATCH ['setMaxDataServiceVersion', 'setMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+5: IDMATCH ['setDataServiceVersion', 'setClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+6: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+7: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+total 7 recommends
+
+trigger(10): maxDataServiceVersion -> maxClientVersion, modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java, 120, FieldName, 54a13c66d421dd17fa61897d8c070f9e1e539fdd
+recommend list:
+1: IDMATCH ['getMaxDataServiceVersion', 'getMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 488, 'MethodName']
+2: IDMATCH ['getDataServiceVersion', 'getClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 406, 'MethodName']
+3: IDMATCH ['maxDataServiceVersion', 'maxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 818, 'ParameterName']
+4: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 105, 'FieldName']
+5: IDMATCH ['setMaxDataServiceVersion', 'setMaxClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 810, 'MethodName']
+6: IDMATCH ['setDataServiceVersion', 'setClientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 778, 'MethodName']
+7: IDMATCH ['dataServiceVersion', 'clientsVersion', 'modules/org.restlet.ext.odata/src/org/restlet/ext/odata/Service.java', 786, 'ParameterName']
+total 7 recommends
+

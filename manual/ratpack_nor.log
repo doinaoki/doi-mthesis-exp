@@ -1,0 +1,80 @@
+trigger(1): getAsBoolean -> asBool, ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java, 33, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsLong', 'asLong', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 65, 'MethodName']
+2: IDMATCH EXMATCH ['getAsByte', 'asByte', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 41, 'MethodName']
+3: IDMATCH EXMATCH ['getAsInt', 'asInt', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 57, 'MethodName']
+4: IDMATCH EXMATCH ['getAsShort', 'asShort', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 49, 'MethodName']
+total 4 recommends
+
+trigger(2): getAsByte -> asByte, ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java, 41, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsLong', 'asLong', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 65, 'MethodName']
+2: IDMATCH ['getAsBoolean', 'asBoolean', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 33, 'MethodName']
+3: IDMATCH EXMATCH ['getAsInt', 'asInt', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 57, 'MethodName']
+4: IDMATCH EXMATCH ['getAsShort', 'asShort', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 49, 'MethodName']
+total 4 recommends
+
+trigger(3): getAsShort -> asShort, ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java, 49, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsLong', 'asLong', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 65, 'MethodName']
+2: IDMATCH ['getAsBoolean', 'asBoolean', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 33, 'MethodName']
+3: IDMATCH EXMATCH ['getAsByte', 'asByte', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 41, 'MethodName']
+4: IDMATCH EXMATCH ['getAsInt', 'asInt', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 57, 'MethodName']
+total 4 recommends
+
+trigger(4): getAsInt -> asInt, ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java, 57, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsLong', 'asLong', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 65, 'MethodName']
+2: IDMATCH ['getAsBoolean', 'asBoolean', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 33, 'MethodName']
+3: IDMATCH EXMATCH ['getAsByte', 'asByte', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 41, 'MethodName']
+4: IDMATCH EXMATCH ['getAsShort', 'asShort', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 49, 'MethodName']
+total 4 recommends
+
+trigger(5): getAsLong -> asLong, ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java, 65, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH ['getAsBoolean', 'asBoolean', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 33, 'MethodName']
+2: IDMATCH EXMATCH ['getAsByte', 'asByte', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 41, 'MethodName']
+3: IDMATCH EXMATCH ['getAsInt', 'asInt', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 57, 'MethodName']
+4: IDMATCH EXMATCH ['getAsShort', 'asShort', 'ratpack-core/src/main/java/org/ratpackframework/util/internal/DefaultTypeCoercingMap.java', 49, 'MethodName']
+total 4 recommends
+
+trigger(6): getAsBoolean -> asBool, ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java, 23, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsLong', 'asLong', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 31, 'MethodName']
+2: IDMATCH EXMATCH ['getAsShort', 'asShort', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 27, 'MethodName']
+3: IDMATCH EXMATCH ['getAsInt', 'asInt', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 29, 'MethodName']
+4: IDMATCH EXMATCH ['getAsByte', 'asByte', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 25, 'MethodName']
+total 4 recommends
+
+trigger(7): getAsByte -> asByte, ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java, 25, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsLong', 'asLong', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 31, 'MethodName']
+2: IDMATCH EXMATCH ['getAsShort', 'asShort', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 27, 'MethodName']
+3: IDMATCH EXMATCH ['getAsInt', 'asInt', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 29, 'MethodName']
+4: IDMATCH ['getAsBoolean', 'asBoolean', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 23, 'MethodName']
+total 4 recommends
+
+trigger(8): getAsShort -> asShort, ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java, 27, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsLong', 'asLong', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 31, 'MethodName']
+2: IDMATCH EXMATCH ['getAsInt', 'asInt', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 29, 'MethodName']
+3: IDMATCH EXMATCH ['getAsByte', 'asByte', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 25, 'MethodName']
+4: IDMATCH ['getAsBoolean', 'asBoolean', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 23, 'MethodName']
+total 4 recommends
+
+trigger(9): getAsInt -> asInt, ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java, 29, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsLong', 'asLong', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 31, 'MethodName']
+2: IDMATCH EXMATCH ['getAsShort', 'asShort', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 27, 'MethodName']
+3: IDMATCH EXMATCH ['getAsByte', 'asByte', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 25, 'MethodName']
+4: IDMATCH ['getAsBoolean', 'asBoolean', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 23, 'MethodName']
+total 4 recommends
+
+trigger(10): getAsLong -> asLong, ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java, 31, MethodName, beb8cabeedcdb42db742e808228408b1e2cc6513
+recommend list:
+1: IDMATCH EXMATCH ['getAsShort', 'asShort', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 27, 'MethodName']
+2: IDMATCH EXMATCH ['getAsInt', 'asInt', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 29, 'MethodName']
+3: IDMATCH EXMATCH ['getAsByte', 'asByte', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 25, 'MethodName']
+4: IDMATCH ['getAsBoolean', 'asBoolean', 'ratpack-core/src/main/java/org/ratpackframework/util/TypeCoercingMap.java', 23, 'MethodName']
+total 4 recommends
+

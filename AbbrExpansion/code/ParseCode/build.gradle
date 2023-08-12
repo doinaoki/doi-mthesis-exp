@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.32.0'
+}
+
+application {
+    mainClass = 'menuHandles.Parse'
+}

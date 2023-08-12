@@ -1,0 +1,133 @@
+trigger(1): bCanEdit -> canBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java, 199, ParameterName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH ['mCanEdit', 'mCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+2: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+3: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+4: IDMATCH ['bCanEdit', 'canBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+5: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 155, 'MethodName']
+6: IDMATCH ['bCanEdit', 'canBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+7: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+8: ['mMasterCanSign', 'mMasterCanBeSign', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 113, 'FieldName']
+9: ['EditKeyActivity', 'BeEditKeyActivity', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 80, 'ClassName']
+10: ['ACTION_EDIT_KEY', 'ACTION_BE_EDIT_KEY', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 84, 'FieldName']
+11: ['finallyEdit', 'finallyBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 372, 'MethodName']
+12: ['getMasterKeyCanCertify', 'getMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 510, 'MethodName']
+13: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 134, 'MethodName']
+14: ['handleActionEditKey', 'handleActionBeEditKey', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 264, 'MethodName']
+15: ['getSecretMasterKeyCanCertify', 'getSecretMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 502, 'MethodName']
+total 15 recommends
+
+trigger(2): setCanEdit -> setCanBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java, 199, MethodName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+2: IDMATCH ['mCanEdit', 'mCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+3: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+4: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+5: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 155, 'MethodName']
+6: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+7: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+8: ['mMasterCanSign', 'mMasterCanBeSign', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 113, 'FieldName']
+9: ['EditKeyActivity', 'BeEditKeyActivity', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 80, 'ClassName']
+10: ['ACTION_EDIT_KEY', 'ACTION_BE_EDIT_KEY', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 84, 'FieldName']
+11: ['finallyEdit', 'finallyBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 372, 'MethodName']
+12: ['getMasterKeyCanCertify', 'getMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 510, 'MethodName']
+13: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 134, 'MethodName']
+14: ['handleActionEditKey', 'handleActionBeEditKey', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 264, 'MethodName']
+15: ['getSecretMasterKeyCanCertify', 'getSecretMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 502, 'MethodName']
+total 15 recommends
+
+trigger(3): bCanEdit -> canBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java, 110, ParameterName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH ['mCanEdit', 'mCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+2: ['mMasterCanSign', 'mMasterCanBeSign', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 113, 'FieldName']
+3: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+4: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+5: ['EditKeyActivity', 'BeEditKeyActivity', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 80, 'ClassName']
+6: IDMATCH ['bCanEdit', 'canBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+7: IDMATCH ['bCanEdit', 'canBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+8: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 155, 'MethodName']
+9: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+10: ['ACTION_EDIT_KEY', 'ACTION_BE_EDIT_KEY', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 84, 'FieldName']
+11: ['finallyEdit', 'finallyBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 372, 'MethodName']
+12: ['getMasterKeyCanCertify', 'getMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 510, 'MethodName']
+13: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 134, 'MethodName']
+14: ['handleActionEditKey', 'handleActionBeEditKey', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 264, 'MethodName']
+15: ['getSecretMasterKeyCanCertify', 'getSecretMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 502, 'MethodName']
+total 15 recommends
+
+trigger(4): setCanEdit -> setCanBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java, 110, MethodName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 155, 'MethodName']
+2: IDMATCH ['mCanEdit', 'mCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+3: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+4: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+5: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+6: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+7: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+8: ['mMasterCanSign', 'mMasterCanBeSign', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 113, 'FieldName']
+9: ['EditKeyActivity', 'BeEditKeyActivity', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 80, 'ClassName']
+10: ['ACTION_EDIT_KEY', 'ACTION_BE_EDIT_KEY', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 84, 'FieldName']
+11: ['finallyEdit', 'finallyBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 372, 'MethodName']
+12: ['getMasterKeyCanCertify', 'getMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 510, 'MethodName']
+13: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 134, 'MethodName']
+14: ['handleActionEditKey', 'handleActionBeEditKey', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 264, 'MethodName']
+15: ['getSecretMasterKeyCanCertify', 'getSecretMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 502, 'MethodName']
+total 15 recommends
+
+trigger(5): mCanEdit -> mCanBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java, 67, FieldName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+2: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+3: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+4: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 155, 'MethodName']
+5: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+6: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+7: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+8: ['mMasterCanSign', 'mMasterCanBeSign', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 113, 'FieldName']
+9: ['EditKeyActivity', 'BeEditKeyActivity', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 80, 'ClassName']
+10: ['ACTION_EDIT_KEY', 'ACTION_BE_EDIT_KEY', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 84, 'FieldName']
+11: ['finallyEdit', 'finallyBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 372, 'MethodName']
+12: ['getMasterKeyCanCertify', 'getMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 510, 'MethodName']
+13: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 134, 'MethodName']
+14: ['handleActionEditKey', 'handleActionBeEditKey', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 264, 'MethodName']
+15: ['getSecretMasterKeyCanCertify', 'getSecretMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 502, 'MethodName']
+total 15 recommends
+
+trigger(6): bCanEdit -> canBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java, 55, ParameterName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'MethodName']
+2: IDMATCH ['mCanEdit', 'mCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+3: IDMATCH ['bCanEdit', 'canBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+4: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 155, 'MethodName']
+5: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+6: IDMATCH ['bCanEdit', 'canBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+7: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+8: ['mMasterCanSign', 'mMasterCanBeSign', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 113, 'FieldName']
+9: ['EditKeyActivity', 'BeEditKeyActivity', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 80, 'ClassName']
+10: ['ACTION_EDIT_KEY', 'ACTION_BE_EDIT_KEY', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 84, 'FieldName']
+11: ['finallyEdit', 'finallyBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 372, 'MethodName']
+12: ['getMasterKeyCanCertify', 'getMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 510, 'MethodName']
+13: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 134, 'MethodName']
+14: ['handleActionEditKey', 'handleActionBeEditKey', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 264, 'MethodName']
+15: ['getSecretMasterKeyCanCertify', 'getSecretMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 502, 'MethodName']
+total 15 recommends
+
+trigger(7): setCanEdit -> setCanBeEdited, OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java, 55, MethodName, 7a66ccb5ee5d3de8f3814267969139397de45e12
+recommend list:
+1: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/UserIdEditor.java', 55, 'ParameterName']
+2: IDMATCH ['mCanEdit', 'mCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 67, 'FieldName']
+3: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'ParameterName']
+4: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 155, 'MethodName']
+5: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/KeyEditor.java', 199, 'MethodName']
+6: IDMATCH ['bCanEdit', 'bCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'ParameterName']
+7: IDMATCH ['setCanEdit', 'setCanBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/widget/SectionView.java', 110, 'MethodName']
+8: ['mMasterCanSign', 'mMasterCanBeSign', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 113, 'FieldName']
+9: ['EditKeyActivity', 'BeEditKeyActivity', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 80, 'ClassName']
+10: ['ACTION_EDIT_KEY', 'ACTION_BE_EDIT_KEY', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 84, 'FieldName']
+11: ['finallyEdit', 'finallyBeEdit', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 372, 'MethodName']
+12: ['getMasterKeyCanCertify', 'getMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 510, 'MethodName']
+13: ['onEdited', 'onBeenEdited', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 134, 'MethodName']
+14: ['handleActionEditKey', 'handleActionBeEditKey', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/ui/EditKeyActivity.java', 264, 'MethodName']
+15: ['getSecretMasterKeyCanCertify', 'getSecretMasterKeyCanBeCertify', 'OpenPGP-Keychain/src/main/java/org/sufficientlysecure/keychain/provider/ProviderHelper.java', 502, 'MethodName']
+total 15 recommends
+
