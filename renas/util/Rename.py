@@ -33,10 +33,20 @@ class Rename:
         self.__wordColumn = 'normalized' # if normalize else 'split'
         pass
 
+# after Debug, should delete this function
+    def getOld(self):
+        return self.__old
+    
+    def getNew(self):
+        return self.__new
+
+    def getDiff(self):
+        return self.__diff
+
     def setNewName(self, newName):
         if self.__new == None:
             self.__new = self.__getNameDetail(newName)
-            self.__setDiff()
+            self.newSetDiff()
         else:
             _logger.error(f'new name is already set: {self.__new}')
         return
@@ -90,7 +100,8 @@ class Rename:
         old['delimiter'] = detail['delimiter']
         old['normalized'] = deepcopy(old['split'])
         return
-
+    
+#todo 標準化するときに省略後展開も行うexpandedを追加.
     def __getNameDetail(self, name):
         result = splitIdentifier(name)
         words = result['split']
@@ -103,6 +114,7 @@ class Rename:
             result['normalized'] = deepcopy(words)
         return result
 
+# 新しいoperation chunkを定義.
     def __setDiff(self):
         if self.__diff == None:
             self.__diff = []
@@ -120,6 +132,66 @@ class Rename:
                     self.__diff.append((diff[0], tuple(oldSplit[diff[1]:diff[2]])))
         return self.__diff
     
+    def newSetDiff(self):
+        if self.__diff == None:
+            self.__diff = []
+            #expand実装後消去
+            self.__old["expanded"] = ["is","ssl","clients","authorize"]
+            self.__new["expanded"] = ["is", "require", "client", "ssl", "authorize"]
+            self.__diff += self.extractFormat()
+            self.__diff += self.extractChangeCase()
+            self.__diff += self.extractOrder()
+
+    #変更操作format抽出
+    def extractFormat(self):
+        oldNormalize = self.__old[self.__wordColumn]
+        newNormalize = self.__new[self.__wordColumn]
+        oldExpanded = self.__old["expanded"]
+        newExpanded = self.__new["expanded"]
+        oldSplit = self.__old["split"]
+        newSplit = self.__new["split"]
+
+        equalSplitWords = set(oldSplit)&set(newSplit)
+        equalExpandedWords = set(oldExpanded)&set(newExpanded)
+        equalNormalizeWords = set(oldNormalize)&set(newNormalize)
+        equalSplitWordsIndex = [oldSplit.index(word) for word in equalSplitWords]
+        equalExpandedWordsIndex = [oldExpanded.index(word) for word in equalExpandedWords]
+
+        formatAbbreviation = [["format", word, ("Abbreviation", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])] for word in equalExpandedWords-equalSplitWords if oldExpanded.index(word) not in equalSplitWordsIndex]
+        formatNormalize = [["format", word, ("Normalize", oldExpanded[oldNormalize.index(word)], newExpanded[newNormalize.index(word)])] for word in equalNormalizeWords-equalExpandedWords if oldNormalize.index(word) not in equalExpandedWordsIndex]
+        _logger.debug(formatAbbreviation + formatNormalize)
+        return formatAbbreviation + formatNormalize
+        
+    #変更操作changeCase抽出
+    def extractChangeCase(self):
+        if self.__new["pattern"] != [] and self.__old["pattern"] != [] and self.__old["pattern"] == self.__new["pattern"]:
+            return [["changeCase", (self.__old["pattern"], self.__new["pattern"])]]
+        return [] 
+
+    def extractOrder(self):
+        oldNormalize = self.__old[self.__wordColumn]
+        newNormalize = self.__new[self.__wordColumn]
+        equalNormalizeWords = set(oldNormalize)&set(newNormalize)
+        self.__old["ordered"] = oldNormalize
+        if len(equalNormalizeWords) > 1:
+            oldWordsOrder = [word for word in oldNormalize if word in equalNormalizeWords]
+            newWordsOrder = [word for word in newNormalize if word in equalNormalizeWords]
+            oldOrder = []
+            newOrder = []
+            for index in range(len(oldWordsOrder)):
+                if oldWordsOrder[index] != newWordsOrder[index]:
+                    oldOrder.append(oldWordsOrder[index])
+                    newOrder.append(newWordsOrder[index])
+            if len(oldOrder) > 1:
+                order = ["order", (oldOrder, newOrder)]
+                self.__old["ordered"] = [word if word not in oldOrder else newOrder[oldOrder.index(word)] for word in oldNormalize ]
+                _logger.debug(order)
+                return [order]
+            return []
+
+        return []
+
+#todo 適用方法変更
     def __applyDiff(self, diff, oldDict):
         dType, *dWords = diff
         if dType == 'delete':
@@ -142,6 +214,7 @@ class Rename:
         elif 'SNAKE' in pattern:
             return '_'.join(words)
 
+#todo 変更
     def __applyDelete(self, oldDict, deletedWords):
         _logger.debug(f'delete {deletedWords}')
         idx = self.__findIndex(deletedWords, oldDict[self.__wordColumn])
@@ -164,6 +237,7 @@ class Rename:
             # heuristic
             self.__replaceSlice(oldDict['heuristic'], idx, idx+deletedWordLen, [])
 
+#todo 変更
     def __applyReplace(self, oldDict, deletedWords, insertedWords):
         _logger.debug(f'replace {deletedWords} to {insertedWords}')
         idx = self.__findIndex(deletedWords, oldDict[self.__wordColumn])
@@ -188,6 +262,7 @@ class Rename:
             toHeuristics = getPaddingList(oldDict['heuristic'][idx:idx+deletedWordLen], insertedWordLen)
             self.__replaceSlice(oldDict['heuristic'], idx, idx+deletedWordLen, toHeuristics)
 
+#todo 変更
     def __applyInsert(self, oldDict, insertedWords):
         _logger.debug(f'insert {insertedWords}')
         insertedWordLen = len(insertedWords)

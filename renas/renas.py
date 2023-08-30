@@ -65,7 +65,7 @@ def getRelatedIds(relationSeries):
         relatedIds.update(id.split(':')[0] for id in ids.split(' - '))
     return relatedIds
 
-
+# トリガーとなるRenameを設定.(operational chunkの抽出)
 def doCoRename(tableData, trigger, relation=False, normalize=False):
     _logger.info(f'do co-rename relation = {relation}, normalize = {normalize}')
     triggerData = tableData.selectDataByRow(trigger)
@@ -89,7 +89,7 @@ def coRenameNone(tableData, triggerRename):
     result = [r for r in recommends if r is not None]
     return result
 
-
+# 他のRenameも推薦できるか見る
 def coRenameRelation(tableData, triggerData, triggerRename):
     triedIds = {triggerData['id']}
     nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
