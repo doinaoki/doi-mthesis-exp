@@ -1,7 +1,7 @@
 import difflib
 from copy import deepcopy
 from ast import literal_eval
-from .Name import KgExpanderSplitter, LemmaManager, AbbreviationManager, CaseManager
+from .Name import KgExpanderSplitter, LemmaManager, AbbreviationManager, CaseManager, ExpandManager
 from .common import getPaddingList, printDict, splitIdentifier
 from logging import getLogger, DEBUG
 from itertools import zip_longest
@@ -10,12 +10,14 @@ import pandas as pd
 _lemmatizer = LemmaManager()
 _abbrManager = None
 _caseManager = CaseManager()
+_expandManager = None
 _logger = getLogger('util.Rename')
 _logger.setLevel(DEBUG)
 
 def setAbbrDic(abbrDicPath):
-    global _abbrManager
+    global _abbrManager, _expandManager
     _abbrManager = AbbreviationManager(abbrDicPath)
+    _expandManager = ExpandManager(abbrDicPath)
     _logger.info('set abbrDic record')
 
 # 命名規則の変化（POSタグ？、省略、Case、区切り文字）は扱いません。
@@ -106,11 +108,15 @@ class Rename:
         result = splitIdentifier(name)
         words = result['split']
 
-        postags = _lemmatizer.getPosTags(words)
-        result['postag'] = postags
         if self.__normalize:
-            result['normalized'] = _lemmatizer.normalize(words, postags)
+            _expandManager = ExpandManager("/Users/doinaoki/Documents/CodeTest/Osumi-saigen2/projects/ratpack/archives/beb8cabeedcdb42db742e808228408b1e2cc6513/record.json")
+            result["expanded"], result["heuristic"] = _expandManager.expand(words, self.__old)
+            postags = _lemmatizer.getPosTags(result["expanded"])
+            result['postag'] = postags
+            result['normalized'] = _lemmatizer.normalize(result["expanded"], postags)
         else:
+            postags = _lemmatizer.getPosTags(words)
+            result['postag'] = postags
             result['normalized'] = deepcopy(words)
         return result
 
@@ -136,11 +142,28 @@ class Rename:
         if self.__diff == None:
             self.__diff = []
             #expand実装後消去
-            self.__old["expanded"] = ["is","ssl","clients","authorize"]
-            self.__new["expanded"] = ["is", "require", "client", "ssl", "authorize"]
+            #self.__old["expanded"] = ["is","ssl","clients","auth"]
+            #self.__new["expanded"] = ["is", "require", "client", "ssl", "auth"]
+            #self.__old["expanded"] = ["load", "entity"]
+            #self.__new["expanded"] = ["read", "e"]
+            #self.__old["normalized"] = ["load", "entity"]
+            #self.__new["normalized"] = ["read", "e"]
             self.__diff += self.extractFormat()
             self.__diff += self.extractChangeCase()
             self.__diff += self.extractOrder()
+
+            oldSplit = self.__old["ordered"]
+            newSplit = self.__new[self.__wordColumn]
+            diff_list = difflib.SequenceMatcher(None, oldSplit, newSplit).get_opcodes()
+            # 0:操作 1:旧名変更開始位置 2:旧名変更終了位置 3:新名変更開始位置 4:新名変更終了位置
+            # (insert, deleteの位置情報はなくす)
+            for diff in diff_list:
+                if diff[0] == "insert":
+                    self.__diff.append((diff[0], tuple(newSplit[diff[3]:diff[4]])))
+                elif diff[0] == "replace":
+                    self.__diff.append((diff[0], tuple(oldSplit[diff[1]:diff[2]]), tuple(newSplit[diff[3]:diff[4]])))
+                elif diff[0] == "delete":
+                    self.__diff.append((diff[0], tuple(oldSplit[diff[1]:diff[2]])))
 
     #変更操作format抽出
     def extractFormat(self):
@@ -157,17 +180,36 @@ class Rename:
         equalSplitWordsIndex = [oldSplit.index(word) for word in equalSplitWords]
         equalExpandedWordsIndex = [oldExpanded.index(word) for word in equalExpandedWords]
 
-        formatAbbreviation = [["format", word, ("Abbreviation", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])] for word in equalExpandedWords-equalSplitWords if oldExpanded.index(word) not in equalSplitWordsIndex]
+        abbrCandidate = equalExpandedWords-equalSplitWords
+        formatAbbreviation = []
+        abbrCandidateOldIndex = [oldExpanded.index(word) for word in abbrCandidate]
+        abbrCandidateNewIndex = [newExpanded.index(word) for word in abbrCandidate]
+        for word in abbrCandidate:
+            oldHeu = self.__old["heuristic"][oldExpanded.index(word)]
+            newHeu = self.__new["heuristic"][newExpanded.index(word)]
+            if oldHeu == newHeu:
+                continue
+            if oldHeu == "H1":
+                formatAbbreviation.append(["format", ("Abbreviation", "H1", word[0], word)])
+            elif newHeu == "H1":
+                formatAbbreviation.append(["format", ("Abbreviation", "H1", word, word[0])])
+            elif oldHeu == "H2" or newHeu == "H2":
+                formatAbbreviation.append(["format", ("Abbreviation", "H2", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])])
+            else:
+                formatAbbreviation.append(["format", ("Abbreviation", "H3", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])])
+
+        #formatAbbreviation = [["format", word, ("Abbreviation", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])] for word in equalExpandedWords-equalSplitWords if oldExpanded.index(word) not in equalSplitWordsIndex]
         formatNormalize = [["format", word, ("Normalize", oldExpanded[oldNormalize.index(word)], newExpanded[newNormalize.index(word)])] for word in equalNormalizeWords-equalExpandedWords if oldNormalize.index(word) not in equalExpandedWordsIndex]
         _logger.debug(formatAbbreviation + formatNormalize)
         return formatAbbreviation + formatNormalize
         
     #変更操作changeCase抽出
     def extractChangeCase(self):
-        if self.__new["pattern"] != [] and self.__old["pattern"] != [] and self.__old["pattern"] == self.__new["pattern"]:
+        if self.__new["pattern"] != [] and self.__old["pattern"] != [] and self.__old["pattern"] != self.__new["pattern"]:
             return [["changeCase", (self.__old["pattern"], self.__new["pattern"])]]
         return [] 
 
+    #変更操作order抽出
     def extractOrder(self):
         oldNormalize = self.__old[self.__wordColumn]
         newNormalize = self.__new[self.__wordColumn]
