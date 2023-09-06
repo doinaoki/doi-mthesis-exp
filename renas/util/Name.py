@@ -294,7 +294,6 @@ class ExpandManager:
         w, hue = self.Heuristics(word, beforeWordDic["expanded"])
         if w != [word]:
             return w, hue
-        print(self.__recordDict)
         '''
         #1hop先から探す
         _RELATION_LIST = [

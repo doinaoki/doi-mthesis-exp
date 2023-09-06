@@ -13,6 +13,7 @@ _caseManager = CaseManager()
 _expandManager = None
 _logger = getLogger('util.Rename')
 _logger.setLevel(DEBUG)
+#_abbrManager = AbbreviationManager("/Users/doinaoki/Documents/CodeTest/Osumi-saigen2/projects/ratpack/archives/beb8cabeedcdb42db742e808228408b1e2cc6513/record.json")
 
 def setAbbrDic(abbrDicPath):
     global _abbrManager, _expandManager
@@ -61,14 +62,18 @@ class Rename:
     def coRename(self, idDict):
         if not self.__normalize:
             self.__overWriteDetail(idDict)
+        """
         if idDict == self.__old:
             _logger.debug('candidate is the same as trigger')
             return None
+        """
         _logger.debug(f'BEFORE {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
         beforeWordList = deepcopy(idDict[self.__wordColumn])
         # apply diff
         for diff in self.__diff:
             self.__applyDiff(diff, idDict)
+        #print(idDict)
+        #print(self.__diff)
         if idDict[self.__wordColumn] == beforeWordList:
             _logger.debug(f'not a candidate')
             return None
@@ -91,7 +96,6 @@ class Rename:
         idDict['join'] = joinedWords
         _logger.debug(f'join: {joinedWords}')
         _logger.debug(f'{idDict["name"]} should be renamed to {idDict["join"]}')
-
         return idDict
 
     def __overWriteDetail(self, old):
@@ -109,7 +113,7 @@ class Rename:
         words = result['split']
 
         if self.__normalize:
-            _expandManager = ExpandManager("/Users/doinaoki/Documents/CodeTest/Osumi-saigen2/projects/ratpack/archives/beb8cabeedcdb42db742e808228408b1e2cc6513/record.json")
+            #_expandManager = ExpandManager("/Users/doinaoki/Documents/CodeTest/Osumi-saigen2/projects/ratpack/archives/beb8cabeedcdb42db742e808228408b1e2cc6513/record.json")
             result["expanded"], result["heuristic"] = _expandManager.expand(words, self.__old)
             postags = _lemmatizer.getPosTags(result["expanded"])
             result['postag'] = postags
@@ -140,19 +144,13 @@ class Rename:
     
     def newSetDiff(self):
         if self.__diff == None:
+            oldSplit = self.__old["normalized"]
             self.__diff = []
-            #expand実装後消去
-            #self.__old["expanded"] = ["is","ssl","clients","auth"]
-            #self.__new["expanded"] = ["is", "require", "client", "ssl", "auth"]
-            #self.__old["expanded"] = ["load", "entity"]
-            #self.__new["expanded"] = ["read", "e"]
-            #self.__old["normalized"] = ["load", "entity"]
-            #self.__new["normalized"] = ["read", "e"]
-            self.__diff += self.extractFormat()
-            self.__diff += self.extractChangeCase()
-            self.__diff += self.extractOrder()
-
-            oldSplit = self.__old["ordered"]
+            if self.__normalize == True:
+                self.__diff += self.extractFormat()
+                self.__diff += self.extractChangeCase()
+                self.__diff += self.extractOrder()
+                oldSplit = self.__old["ordered"]
             newSplit = self.__new[self.__wordColumn]
             diff_list = difflib.SequenceMatcher(None, oldSplit, newSplit).get_opcodes()
             # 0:操作 1:旧名変更開始位置 2:旧名変更終了位置 3:新名変更開始位置 4:新名変更終了位置
@@ -169,6 +167,7 @@ class Rename:
     def extractFormat(self):
         oldNormalize = self.__old[self.__wordColumn]
         newNormalize = self.__new[self.__wordColumn]
+        #print(self.__old)
         oldExpanded = self.__old["expanded"]
         newExpanded = self.__new["expanded"]
         oldSplit = self.__old["split"]
@@ -177,31 +176,30 @@ class Rename:
         equalSplitWords = set(oldSplit)&set(newSplit)
         equalExpandedWords = set(oldExpanded)&set(newExpanded)
         equalNormalizeWords = set(oldNormalize)&set(newNormalize)
-        equalSplitWordsIndex = [oldSplit.index(word) for word in equalSplitWords]
         equalExpandedWordsIndex = [oldExpanded.index(word) for word in equalExpandedWords]
 
         abbrCandidate = equalExpandedWords-equalSplitWords
         formatAbbreviation = []
-        abbrCandidateOldIndex = [oldExpanded.index(word) for word in abbrCandidate]
-        abbrCandidateNewIndex = [newExpanded.index(word) for word in abbrCandidate]
+        heuH1 = ["Abbreviation", "H1", []]
         for word in abbrCandidate:
             oldHeu = self.__old["heuristic"][oldExpanded.index(word)]
             newHeu = self.__new["heuristic"][newExpanded.index(word)]
             if oldHeu == newHeu:
                 continue
             if oldHeu == "H1":
-                formatAbbreviation.append(["format", ("Abbreviation", "H1", word[0], word)])
+                heuH1[2].append((word[0], word))
             elif newHeu == "H1":
-                formatAbbreviation.append(["format", ("Abbreviation", "H1", word, word[0])])
+                heuH1[2].append((word, word[0]))
             elif oldHeu == "H2" or newHeu == "H2":
                 formatAbbreviation.append(["format", ("Abbreviation", "H2", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])])
             else:
                 formatAbbreviation.append(["format", ("Abbreviation", "H3", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])])
 
         #formatAbbreviation = [["format", word, ("Abbreviation", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])] for word in equalExpandedWords-equalSplitWords if oldExpanded.index(word) not in equalSplitWordsIndex]
-        formatNormalize = [["format", word, ("Normalize", oldExpanded[oldNormalize.index(word)], newExpanded[newNormalize.index(word)])] for word in equalNormalizeWords-equalExpandedWords if oldNormalize.index(word) not in equalExpandedWordsIndex]
+        formatNormalize = [["format", ("Normalize", oldExpanded[oldNormalize.index(word)], newExpanded[newNormalize.index(word)])] for word in equalNormalizeWords-equalExpandedWords if oldNormalize.index(word) not in equalExpandedWordsIndex]
+        heuH1 = [["format", heuH1]] if heuH1[2] != [] else []
         _logger.debug(formatAbbreviation + formatNormalize)
-        return formatAbbreviation + formatNormalize
+        return formatAbbreviation + formatNormalize + heuH1
         
     #変更操作changeCase抽出
     def extractChangeCase(self):
@@ -218,15 +216,17 @@ class Rename:
         if len(equalNormalizeWords) > 1:
             oldWordsOrder = [word for word in oldNormalize if word in equalNormalizeWords]
             newWordsOrder = [word for word in newNormalize if word in equalNormalizeWords]
+            """
             oldOrder = []
             newOrder = []
             for index in range(len(oldWordsOrder)):
                 if oldWordsOrder[index] != newWordsOrder[index]:
                     oldOrder.append(oldWordsOrder[index])
                     newOrder.append(newWordsOrder[index])
-            if len(oldOrder) > 1:
-                order = ["order", (oldOrder, newOrder)]
-                self.__old["ordered"] = [word if word not in oldOrder else newOrder[oldOrder.index(word)] for word in oldNormalize ]
+            """
+            if len(oldWordsOrder) > 1 and oldWordsOrder != newWordsOrder:
+                order = ["order", (oldWordsOrder, newWordsOrder)]
+                self.__old["ordered"] = [word if word not in oldWordsOrder else newWordsOrder[oldWordsOrder.index(word)] for word in oldNormalize ]
                 _logger.debug(order)
                 return [order]
             return []
@@ -236,7 +236,13 @@ class Rename:
 #todo 適用方法変更
     def __applyDiff(self, diff, oldDict):
         dType, *dWords = diff
-        if dType == 'delete':
+        if dType == 'format':
+            self.__applyFormat(oldDict, diff[1])
+        elif dType == 'order':
+            self.__applyOrder(oldDict, diff[1])
+        elif dType == 'changeCase':
+            pass
+        elif dType == 'delete':
             self.__applyDelete(oldDict, dWords[0])
         elif dType == 'replace':
             self.__applyReplace(oldDict, dWords[0], dWords[1])
@@ -255,6 +261,111 @@ class Rename:
             return ''.join(concated)
         elif 'SNAKE' in pattern:
             return '_'.join(words)
+
+    def __applyFormat(self, oldDict, format):
+        operation = format[0]
+        #省略語の展開はする
+        #省略語にする操作の適用は考え中
+        if operation == "Abbreviation":
+            heu = format[1]
+            if heu  == "H1":
+                ops = format[2]
+                toAbbr = []
+                toExpan = []
+                for op in ops:
+                    old = op[0]
+                    new = op[1]
+                    if len(old) == 1:
+                        toExpan.append([old, new])
+                    else:
+                        toAbbr.append([old, new])
+                if len(toExpan) >= 2:
+                #Todo must change
+
+                    toExpan.append([toExpan[0][0]+toExpan[1][0], [toExpan[0][1]+toExpan[1][1]]])
+                    toExpan.append([toExpan[1][0]+toExpan[0][0], [toExpan[1][1]+toExpan[0][1]]])
+                #print(toExpan)
+                #Expan
+                for i in toExpan:
+                    #this if statement is unnecessary
+                    if i[0] in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(i[0])
+                        oldDict["normalized"][id] = newWord
+                        oldDict["heuristic"][id] = "ST"
+                    elif i[1] in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(i[1])
+                        oldDict["heuristic"][id] = "ST"
+            elif heu == "H2":
+                oldWord = format[2]
+                newWord = format[3]
+                if len(oldWord) < len(newWord):
+                    if oldWord in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(oldWord)
+                        oldDict["normalized"][id] = newWord
+                        oldDict["heuristic"][id] = "ST"
+                        print("Expand2")
+                    if newWord in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(oldWord)
+                        oldDict["heuristic"][id] = "ST"
+                    return
+                else:
+                    ##H2の省略語作成実装
+                    print("Abbreviation2")
+                    return
+            elif heu == "H3":
+                oldWord = format[2]
+                newWord = format[3]
+                if len(oldWord) < len(newWord):
+                    if oldWord in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(oldWord)
+                        oldDict["normalized"][id] = newWord
+                        oldDict["heuristic"][id] = "ST"
+                    if newWord in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(oldWord)
+                        oldDict["heuristic"][id] = "ST"
+                    return
+                else:
+                    ##H3の省略語作成実装
+                    print("Abbreviation3")
+                    return
+        elif operation == "Normalize":
+            pass
+        else:
+            _logger.error("undefined format operation")
+# Todo must case cange
+    def __applyOrder(self, oldDict, order):
+        oldWords = deepcopy(oldDict["normalized"])
+        oldOrder = order[0]
+        newOrder = order[1]
+        useOrderWords = []
+        for w in oldWords:
+            if w in oldOrder:
+                useOrderWords.append(w)
+        if len(useOrderWords) <= 1:
+            return
+        
+        orderedWords = []
+        newHeu = []
+        newPostag = []
+        for w in newOrder:
+            if w in useOrderWords:
+                orderedWords.append(w)
+                oldId = oldWords.index(w)
+                newHeu.append(oldDict["heuristic"][oldId])
+                newPostag.append(oldDict["postag"][oldId])
+        if useOrderWords == orderedWords:
+            return
+        print(useOrderWords, orderedWords)
+        for i in range(len(useOrderWords)):
+            oldId = oldWords.index(useOrderWords[i])
+            oldDict["normalized"][oldId] = orderedWords[i]
+            oldDict["heuristic"][oldId] = newHeu[i]
+            oldDict["postag"][oldId] = newPostag[i]
+            print(f"{oldId}, {orderedWords[i]}, {newHeu[i]}, {newPostag[i]}")
+                
+
+        return
+
 
 #todo 変更
     def __applyDelete(self, oldDict, deletedWords):

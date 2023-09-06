@@ -12,10 +12,11 @@ from .util.Name import ExpandManager
 def setRenameTest(oldName: dict, newName: str):
     _rename = Rename(oldName, True)
     _rename.setNewName(newName)
+    _rename.coRename(oldName)
 
-    print(f"oldname = {_rename.getOld()}")
-    print(f"newname = {_rename.getNew()}")
-    print(f"difference = {_rename.getDiff()}")
+    #print(f"oldname = {_rename.getOld()}")
+    #print(f"newname = {_rename.getNew()}")
+    #print(f"difference = {_rename.getDiff()}")
 
 #include 変更前単語省略後(H2), 単複数形変化, change case, 
 def oldNameSet1():
@@ -25,6 +26,9 @@ def oldNameSet1():
     oldName["expanded"] = ["is", "ssl", "clients", "authorized"]
     oldName["normalized"] = ["be", "ssl", "client", "authorize"]
     oldName["heuristic"] = ["ST", "ST", "ST", "H2"]
+    oldName["delimiter"] = ";;;;".split(';')
+    oldName["postag"] = ['VBZ', 'NN', 'NNS', 'VBN']
+    oldName["case"] = ["LOWER", "UPPER", "TITLE", "TITLE"]
     oldName["pattern"] = ["LCAMEL"]
     return oldName
 
@@ -44,6 +48,9 @@ def oldNameSet2():
     oldName["expanded"] = ["super", "context"]
     oldName["normalized"] = ["super", "context"]
     oldName["heuristic"] = ["ST", "ST"]
+    oldName["delimiter"] = ";;".split(';')
+    oldName["postag"] = ['NN', 'NN']
+    oldName["case"] = ["LOWER", "TITLE"]
     oldName["pattern"] = ["LCAMEL"]
     return oldName
 
@@ -64,6 +71,9 @@ def oldNameSet3():
     oldName["expanded"] = ["string","builder", "special"]
     oldName["normalized"] = ["string", "builder", "special"]
     oldName["pattern"] = ["LCAMEL"]
+    oldName["delimiter"] = ";;;".split(';')
+    oldName["case"] = ["LOWER", "TITLE", "TITLE"]
+    oldName["postag"] = ['NN', 'NN', 'JJ']
     oldName["heuristic"] = ["ST", "ST", "ST"]
     return oldName
 
@@ -80,12 +90,15 @@ def newNameSet3():
 #include record.json省略語
 def oldNameSet4():
     oldName = {}
-    oldName["name"] = "updateTaskStatus"
-    oldName["split"] = ["update", "task", "status"]
-    oldName["expanded"] = ["update","task", "status"]
-    oldName["normalized"] = ["update", "task", "status"]
+    oldName["name"] = "updateTasksStatusPosition"
+    oldName["split"] = ["update", "tasks", "status","position"]
+    oldName["expanded"] = ["update","tasks", "status", "position"]
+    oldName["normalized"] = ["update", "task", "status", "position"]
     oldName["pattern"] = ["LCAMEL"]
-    oldName["heuristic"] = ["ST", "ST", "ST"]
+    oldName["postag"] = ['NN', 'NNS', 'NN', 'NN']
+    oldName["delimiter"] = ";;;;".split(';')
+    oldName["case"] = ["LOWER", "TITLE", "TITLE", "TITLE"]
+    oldName["heuristic"] = ["ST", "ST", "ST", "ST"]
     return oldName
 
 def newNameSet4():
@@ -105,6 +118,9 @@ def oldNameSet5():
     oldName["expanded"] = ["item", "value"]
     oldName["normalized"] = ["item", "value"]
     oldName["pattern"] = ["LCAMEL"]
+    oldName["delimiter"] = ";;".split(';')
+    oldName["postag"] = ['NN', 'NN']
+    oldName["case"] = ["LOWER", "TITLE"]
     oldName["heuristic"] = ["ST", "ST"]
     return oldName
 
@@ -117,6 +133,33 @@ def newNameSet5():
     oldName["pattern"] = ["LCAMEL"]
     return oldName
 
+#include 変更前単語省略後(H1)
+def oldNameSet6():
+    oldName = {}
+    oldName["name"] = "sbSpecial"
+    oldName["split"] = ["sb", "special"]
+    oldName["expanded"] = ["string","builder", "special"]
+    oldName["normalized"] = ["string", "builder", "special"]
+    oldName["pattern"] = ["LCAMEL"]
+    oldName["delimiter"] = ";;;".split(';')
+    oldName["case"] = ["LOWER", "TITLE", "TITLE"]
+    oldName["postag"] = ['NN', 'NN', 'JJ']
+    oldName["heuristic"] = ["H1", "H1", "ST"]
+    return oldName
+
+def newNameSet6():
+    oldName = {}
+    oldName["name"] = "stringBuilderSpecial"
+    oldName["split"] = ["string","builder", "special"]
+    oldName["expanded"] = ["string","builder", "special"]
+    oldName["normalized"] = ["string", "builder", "special"]
+    oldName["pattern"] = ["LCAMEL"]
+    oldName["delimiter"] = ";;;".split(';')
+    oldName["case"] = ["LOWER", "TITLE", "TITLE"]
+    oldName["postag"] = ['NN', 'NN', 'JJ']
+    oldName["heuristic"] = ["ST", "ST", "ST"]
+    return oldName
+
 #em = ExpandManager("/Users/doinaoki/Documents/CodeTest/Osumi-OsmAnd/projects/OsmAnd/archives/30681c6f6485fc2314ea4b4e0841942db16ade43/record.json")
 #print(em.expand(newNameSet1()["split"], oldNameSet1()))
 #setRenameTest(oldNameSet1(), newNameSet1()["name"])
@@ -124,3 +167,4 @@ def newNameSet5():
 #setRenameTest(oldNameSet3(), newNameSet3()["name"])
 #setRenameTest(oldNameSet4(), newNameSet4()["name"])
 #setRenameTest(oldNameSet5(), newNameSet5()["name"])
+setRenameTest(oldNameSet6(), newNameSet6()["name"])
