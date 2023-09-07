@@ -44,8 +44,14 @@ if [ "$FORCE" = "TRUE" ] || [ ! -f "${GZIP_EXTABLE_PATH}" ]; then
     repo=${archive}"/repo"
     # parse code
     java -jar "${JARPATH}/${PARSECODE}" "${archive}"
+
+    cd "AbbrExpansion/code/SemanticExpand"
+
+    ./gradlew run --args "${archive}"
+
+    cd ../../..
     # semantic expand
-    java -jar "${JARPATH}/${SEMANTICEXPAND}" "${archive}"
+    #java -jar "AbbrExpansion/code/SemanticExpand/out/libs/${SEMANTICEXPAND}" "${archive}"
     # normalize
     python3 -m renas.normalize "${archive}"
     # gzip

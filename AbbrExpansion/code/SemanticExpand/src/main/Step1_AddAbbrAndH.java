@@ -69,10 +69,10 @@ public class  Step1_AddAbbrAndH {
         }
 
         // TODO: 2022/11/22 handle expansion comment
+        // Change:2023/09/07 in advance, look for expanded word in source code
         public Expansion handleExpansion(String part, String stringCase) {
             HashMap<String, Integer> collectedCandidates = new HashMap<>();
             HashMap<String, ArrayList<Heu.Heuristic>> heuristics = new HashMap<>();
-
             for (Util.Relation relation : Util.Relation.values()) {
                 String candidate = get(relation.toColumnName());
                 if (candidate == null) {
@@ -83,6 +83,10 @@ public class  Step1_AddAbbrAndH {
                 } else {
                     Step1_AddAbbrAndH.handleExpansion(part, candidate, collectedCandidates, heuristics);
                 }
+                //Step1_AddAbbrAndH.handleDic(part, collectedCandidates, heuristics);
+            }
+
+            if (collectedCandidates.isEmpty()) {
                 Step1_AddAbbrAndH.handleDic(part, collectedCandidates, heuristics);
             }
 
@@ -192,7 +196,12 @@ public class  Step1_AddAbbrAndH {
     private static void handleDic(String part,
                                   HashMap<String, Integer> collectedCandidates,
                                   HashMap<String, ArrayList<Heu.Heuristic>> collectedHeuristics) {
-        String expan =Step4_Expan.LinsenAbbrDic(part).replaceAll(" ", ":");
+        
+        String expan =Step4_Expan.LinsenAbbrDic(part).replaceAll(" ", "_");
+        if (expan.equals("")){
+            return;
+        }
+        expan = ":" + expan;
         collectCandidates(Heu.handleExpansionForH(part, expan, "H1"), Heu.Heuristic.H1, collectedCandidates, collectedHeuristics);
         collectCandidates(Heu.handleExpansionForH(part, expan, "H2"), Heu.Heuristic.H2, collectedCandidates, collectedHeuristics);
         collectCandidates(Heu.handleExpansionForH(part, expan, "H3"), Heu.Heuristic.H3, collectedCandidates, collectedHeuristics);

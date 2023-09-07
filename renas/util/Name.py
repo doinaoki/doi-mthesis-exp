@@ -304,6 +304,7 @@ class ExpandManager:
         for ids in relationData:
             relatedWords.update(id.split(':')[1] for id in ids.split(' - '))
         '''
+        
 
         #record.jsonから探す
         if word in self.__recordDict:

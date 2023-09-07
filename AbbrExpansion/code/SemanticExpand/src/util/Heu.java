@@ -63,7 +63,6 @@ public class Heu {
             // expand fail
             return null;
         }
-
         return possibleExpansions
                 .stream()
                 .min(Comparator.comparingInt(String::length))
@@ -152,7 +151,6 @@ public class Heu {
     // TODO: 2022/11/25 candidate.split 
     public static ArrayList<String> handleExpansionForH(String part, String candidate, String H) {
         ArrayList<String> result = new ArrayList<>();
-
         String[] identifiers = candidate.split(" - ");
         for (int j = 0; j < identifiers.length; j++) {
             // may not contain the name of identifier
@@ -161,6 +159,7 @@ public class Heu {
             }
             String nameOfIdentifier = identifiers[j].split(":")[1];
             String expansion = null;
+
             switch (H) {
                 case "H1":
                     expansion = Heu.H1(part, Util.split(nameOfIdentifier).get("split"));
