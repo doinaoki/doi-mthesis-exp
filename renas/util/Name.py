@@ -237,6 +237,24 @@ class ExpandManager:
         with open(os.path.join(self.__abbrPath, "EnglishDic.txt"), "r") as f:
             self.__englishSet = set(f.read().split("\n"))
         
+        self.__classRecordDict = {}
+        with open(os.path.join(os.path.dirname(dictPath), "classRecord.json"), 'r') as f:
+            __classRecordJson = json.load(f)
+        for className, records in __classRecordJson.items():
+            print(className)
+            self.__classRecordDict[className] = {}
+            temp = {}
+            for rec, count in records.items():
+                print(rec, count)
+                abbr, expan = rec.split("==")
+                if abbr in temp:
+                    if count > temp[abbr]:
+                        temp[abbr] = count
+                        self.__classRecordDict[className][abbr] = expan
+                else:
+                    self.__classRecordDict[className][abbr] = expan
+                    
+
         self.__recordDict = {}
         with open(dictPath, 'r') as f:
             __recordJson = json.load(f)
@@ -294,19 +312,13 @@ class ExpandManager:
         w, hue = self.Heuristics(word, beforeWordDic["expanded"])
         if w != [word]:
             return w, hue
-        '''
-        #1hop先から探す
-        _RELATION_LIST = [
-    "subclass","subsubclass","parents","ancestor","methods","fields","siblings","comemnt","type","enclosingCLass","assignment","methodInvocated","parameterArgument","parameter","enclosingMethod","argument"
-        ]
-        relationData = beforeWordDic[_RELATION_LIST].dropna()
-        relatedWords = set()
-        for ids in relationData:
-            relatedWords.update(id.split(':')[1] for id in ids.split(' - '))
-        '''
         
+        #同クラス内から探索
+        if beforeWordDic["files"] in self.__classRecordDict:
+            if word in self.__classRecordDict[beforeWordDic["files"]]:
+                return self.Heuristics(word, self.__classRecordDict[beforeWordDic["files"]][word].split(" "))
 
-        #record.jsonから探す
+        #record.jsonから探す(プロジェクト全体から探索)
         if word in self.__recordDict:
             return self.Heuristics(word, [max(self.__recordDict[word])])
 

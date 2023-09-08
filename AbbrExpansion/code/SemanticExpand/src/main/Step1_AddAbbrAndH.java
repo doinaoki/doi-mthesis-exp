@@ -14,11 +14,14 @@ import java.util.stream.IntStream;
 
 public class  Step1_AddAbbrAndH {
     public static HashMap<Heu.Heuristic, HashMap<String, String>> expansionRecord;
+    public static HashMap<String, HashMap<String, Integer>> expansionClassRecord;
 
     static {
         expansionRecord = new HashMap<>();
         expansionRecord.put(Heu.Heuristic.H2, new HashMap<>());
         expansionRecord.put(Heu.Heuristic.H3, new HashMap<>());
+
+        expansionClassRecord = new HashMap();
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -28,6 +31,7 @@ public class  Step1_AddAbbrAndH {
 
         handleParseReult(lines);
         exportExpansionRecord(Paths.get(args[0], "record.json").toString());
+        exportExpansionClassRecord(Paths.get(args[0], "classRecord.json").toString());
     }
 
     public static class ParseResultLine extends Util.Line {
@@ -100,6 +104,7 @@ public class  Step1_AddAbbrAndH {
                         .orElse("");
                 Heu.Heuristic heuristic = heuristics.get(expanded).get(0);
                 recordExpansion(part, expanded, heuristic);
+                recordClassExpansion(part, expanded, get("files"));
                 return new Expansion(part, expanded, stringCase, heuristic);
             }
         }
@@ -109,6 +114,22 @@ public class  Step1_AddAbbrAndH {
         switch (heuristic) {
             case H2 -> Util.putHashMap(expansionRecord.get(Heu.Heuristic.H2), expanded, part);
             case H3 -> Util.putHashMap(expansionRecord.get(Heu.Heuristic.H3), expanded, part);
+        }
+    }
+
+    private static void recordClassExpansion(String part, String expanded, String className){
+        if (!expansionClassRecord.containsKey(className)){
+            expansionClassRecord.put(className, new HashMap<>());
+        }
+        expanded = expanded.replaceAll("#", " ").replaceAll( " *$", "" );;
+        String key = part+"=="+expanded;
+
+        if (!expansionClassRecord.get(className).containsKey(key)){
+            expansionClassRecord.get(className).put(key, 1);
+        }
+        else{
+            int value = expansionClassRecord.get(className).get(key);
+            expansionClassRecord.get(className).put(key, value+1);
         }
     }
 
@@ -209,6 +230,16 @@ public class  Step1_AddAbbrAndH {
 
     private static void exportExpansionRecord(String outputPath) {
         JSONObject jsonObject = new JSONObject(expansionRecord);
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath))) {
+            jsonObject.write(bw);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private static void exportExpansionClassRecord(String outputPath) {
+        JSONObject jsonObject = new JSONObject(expansionClassRecord);
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath))) {
             jsonObject.write(bw);
         } catch (IOException e) {
