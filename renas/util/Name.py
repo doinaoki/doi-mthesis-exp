@@ -241,11 +241,9 @@ class ExpandManager:
         with open(os.path.join(os.path.dirname(dictPath), "classRecord.json"), 'r') as f:
             __classRecordJson = json.load(f)
         for className, records in __classRecordJson.items():
-            print(className)
             self.__classRecordDict[className] = {}
             temp = {}
             for rec, count in records.items():
-                print(rec, count)
                 abbr, expan = rec.split("==")
                 if abbr in temp:
                     if count > temp[abbr]:

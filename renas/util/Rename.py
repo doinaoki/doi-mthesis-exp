@@ -45,6 +45,11 @@ class Rename:
 
     def getDiff(self):
         return self.__diff
+    
+    def getOp(self):
+        if self.__normalize:
+            return ["Relation-Normalize", self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
+        return ["Relation", self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
 
     def setNewName(self, newName):
         if self.__new == None:
@@ -305,7 +310,7 @@ class Rename:
                         oldDict["heuristic"][id] = "ST"
                         print("Expand2")
                     if newWord in oldDict["normalized"]:
-                        id = oldDict["normalized"].index(oldWord)
+                        id = oldDict["normalized"].index(newWord)
                         oldDict["heuristic"][id] = "ST"
                     return
                 else:
@@ -321,7 +326,7 @@ class Rename:
                         oldDict["normalized"][id] = newWord
                         oldDict["heuristic"][id] = "ST"
                     if newWord in oldDict["normalized"]:
-                        id = oldDict["normalized"].index(oldWord)
+                        id = oldDict["normalized"].index(newWord)
                         oldDict["heuristic"][id] = "ST"
                     return
                 else:

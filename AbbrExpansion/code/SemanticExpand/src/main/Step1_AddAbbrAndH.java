@@ -123,7 +123,6 @@ public class  Step1_AddAbbrAndH {
         }
         expanded = expanded.replaceAll("#", " ").replaceAll( " *$", "" );;
         String key = part+"=="+expanded;
-
         if (!expansionClassRecord.get(className).containsKey(key)){
             expansionClassRecord.get(className).put(key, 1);
         }
@@ -164,7 +163,7 @@ public class  Step1_AddAbbrAndH {
                 sb.append(exportLine(line, expanded, null)).append("\n");
             }
         }
-        try (FileWriter fw = new FileWriter(GlobleVariable.addAbbrAndHResultFile)) {
+        try (FileWriter fw = new FileWriter(GlobleVariable.addAbbrAndHResultFile, false)) {
             BufferedWriter bw = new BufferedWriter(fw);
             bw.append(sb);
             bw.flush();
