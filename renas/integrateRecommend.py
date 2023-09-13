@@ -12,6 +12,7 @@ import argparse
 from multiprocessing import Pool
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG, log
 
+from .util.ExTable import ExTable
 from datetime import datetime, date, timedelta
 import pandas as pd
 from .util.Name import KgExpanderSplitter
@@ -103,7 +104,7 @@ def setOperations(path):
 
 def getCommitsInfo(commit):
     #複数コミットの取り方
-    #dateが+2のコミットを含むようにする(仮)根拠なし
+    #dateが+5のコミットを含むようにする(仮)根拠なし
     researchCommits = []
     num = 2
     fromCommitDate = commitToDate[commit]
@@ -117,7 +118,7 @@ def getKey(dic):
     return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
 
 #Todo Dataframeで実装し直すべき
-def recommendCommit(commit):
+def recommendCommit(commit, tableData):
     #調査体操となる複数コミットを取得
     researchCommits = getCommitsInfo(commit)
     opGroup = {}
@@ -130,6 +131,9 @@ def recommendCommit(commit):
         goldset = renameInfo[c]
         for rDic in goldset:
             key = getKey(rDic)
+            if key not in operations["Relation-Normalize"][c]:
+                print(f"something wrong {key}")
+                continue
             ops = operations["Relation-Normalize"][c][key]
             for op in ops:
                 #must change
@@ -142,6 +146,9 @@ def recommendCommit(commit):
     for trigger in renameInfo[commit]:
         # triggerを元にoperaion dicからrename情報を得る
         triggerKey = getKey(trigger)
+        if triggerKey not in operations["Relation-Normalize"][commit]:
+            print(f"something wrong {triggerKey}")
+            continue
         triggerOp = operations["Relation-Normalize"][commit][triggerKey]
         triggerRec = recommendName[triggerKey]
         renames = []
@@ -154,6 +161,7 @@ def recommendCommit(commit):
                 renames.append(rDic)
 
         if len(renames) < 1:
+            print(triggerOp)
             print("one rename is conducted")
             continue
 
@@ -242,10 +250,130 @@ def getExactMatch(renames, recommendation, indexes):
     _logger.debug(f'exact matches: {result}')
     return result
 
+def canRecommendation(rename, recommendation):
+    renameData = tableData.selectDataByRow(rename)
+    if renameData is None:
+        return []
+    typeOfIdentifier = rename["typeOfIdentifier"]
+    oldName = rename["oldname"]
+    enclosingClass = renameData["enclosingCLass"]
+    fileName = rename["files"]
+    if typeOfIdentifier == "ClassName":
+        methods = renameData["methods"].split(" - ")
+        for i in range(len(recommendation)):
+            rec = recommendation[i]
+            if oldName != rec["name"]:
+                continue
+            if fileName != rec["files"]:
+                continue
+            recMethods = rec["methods"].split(" - ")
+            for method in methods:
+                if method == "":
+                    continue
+                if method in recMethods:
+                    return i
+        return None
+
+    elif typeOfIdentifier == "MethodName":
+        siblings = renameData["siblings"].split(" - ")
+        for i in range(len(recommendation)):
+            rec = recommendation[i]
+            if oldName != rec["name"]:
+                continue
+            if enclosingClass != rec["enclosingCLass"]:
+                continue
+            return i
+        for i in range(len(recommendation)):
+            rec = recommendation[i]
+            if oldName != rec["name"]:
+                continue
+            recMethods = rec["siblings"].split(" - ")
+            for method in siblings:
+                if method == "":
+                    continue
+                if method in recMethods:
+                    return i
+        return None
+    
+    elif typeOfIdentifier == "FieldName":
+        siblings = renameData["siblings"].split(" - ")
+        for i in range(len(recommendation)):
+            rec = recommendation[i]
+            if oldName != rec["name"]:
+                continue
+            if enclosingClass != rec["enclosingCLass"]:
+                continue
+            return i
+        for i in range(len(recommendation)):
+            rec = recommendation[i]
+            if oldName != rec["name"]:
+                continue
+            recFields = rec["siblings"]
+            if recFields == None:
+                continue
+            recFields = rec["siblings"]
+            for field in siblings:
+                if field == "":
+                    continue
+                if field in recFields:
+                    return i
+        return None
+
+    elif typeOfIdentifier == "ParameterName":
+        enclosingMethods = renameData["enclosingMethod"]
+        for i in range(len(recommendation)):
+            rec = recommendation[i]
+            if oldName != rec["name"]:
+                continue
+            if enclosingClass != rec["enclosingCLass"]:
+                continue
+            if enclosingMethods != rec["enclosingMethod"]:
+                continue
+            return i
+        return None
+    
+    elif typeOfIdentifier == "VariableName":
+        enclosingMethods = renameData["enclosingMethod"]
+        for i in range(len(recommendation)):
+            rec = recommendation[i]
+            if oldName != rec["name"]:
+                continue
+            if enclosingClass != rec["enclosingCLass"]:
+                continue
+            if enclosingMethods != rec["enclosingMethod"]:
+                continue
+            return i
+        return None
+    
+    else:
+        _logger.error("unknown typeOfIdentifier")
+
 def evaluate(renames, recommendation):
     #print(len(renames), len(recommendation))
     if len(recommendation) == 0:
         return []
+    
+    trueRecommendIndex = []
+    for i in range(len(renames)):
+        r = renames[i]
+        key = str([r["line"], r["typeOfIdentifier"], r["oldname"], r["files"]])
+        flag = False
+        for k in range(len(recommendation)):
+            rec = recommendation[k]
+            recKey = str([rec["line"], rec["typeOfIdentifier"], rec["name"], rec["files"]])
+            if key == recKey:
+                trueRecommendIndex.append([i, k])
+                flag = True
+                break
+        if flag:
+            continue
+        ri = canRecommendation(r, recommendation)
+        if ri == None:
+            continue
+        trueRecommendIndex.append([i, ri])
+        print(i, ri)
+                
+    '''
     rIdentifier = []
     recIdentifier = []
     for r in renames:
@@ -256,6 +384,7 @@ def evaluate(renames, recommendation):
     
     trueRecommend = list(set(rIdentifier) & set(recIdentifier))
     trueRecommendIndex = [(rIdentifier.index(t), recIdentifier.index(t)) for t in trueRecommend]
+    '''
     print(trueRecommendIndex)
     #print(f"recall = {len(trueRecommend)/len(renames)}, precision = {len(trueRecommend)/len(recommendation)}")
     return trueRecommendIndex
@@ -276,7 +405,9 @@ if __name__ ==  "__main__":
 
         _logger.debug(f"start researching {fileName}")
         for commit in renameInfo.keys():
-            recommendCommit(commit)
+            tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
+            tableData = ExTable(tablePath)
+            recommendCommit(commit, tableData)
 
     with open(detailCSV, 'w') as dCSV:
         w = csv.writer(dCSV)

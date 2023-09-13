@@ -360,13 +360,13 @@ class Rename:
                 newPostag.append(oldDict["postag"][oldId])
         if useOrderWords == orderedWords:
             return
-        print(useOrderWords, orderedWords)
+        #print(useOrderWords, orderedWords)
         for i in range(len(useOrderWords)):
             oldId = oldWords.index(useOrderWords[i])
             oldDict["normalized"][oldId] = orderedWords[i]
             oldDict["heuristic"][oldId] = newHeu[i]
             oldDict["postag"][oldId] = newPostag[i]
-            print(f"{oldId}, {orderedWords[i]}, {newHeu[i]}, {newPostag[i]}")
+            #print(f"{oldId}, {orderedWords[i]}, {newHeu[i]}, {newPostag[i]}")
                 
 
         return

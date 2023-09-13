@@ -14,7 +14,7 @@ from copy import deepcopy
 
 _logger = getLogger(__name__)
 _logger.setLevel(DEBUG)
-operationDic = {}
+operationDic = {"Relation-Normalize": {}, "Relation": {}}
 _RELATION_LIST = [
     "subclass","subsubclass","parents","ancestor","methods","fields","siblings","comemnt","type","enclosingCLass","assignment","methodInvocated","parameterArgument","parameter","enclosingMethod","argument"
 ]
@@ -67,8 +67,10 @@ def getRelatedIds(relationSeries):
     return relatedIds
 
 def recordOperation(commit, op):
-    if op[0] not in operationDic:
-        operationDic[op[0]] = {}
+    if op == []:
+        if commit not in operationDic["Relation-Normalize"]:
+            operationDic["Relation-Normalize"][commit] = {}
+        return
     if commit not in operationDic[op[0]]:
         operationDic[op[0]][commit] = {}
     operationDic[op[0]][commit][commit+op[1]] = op[2]
@@ -78,6 +80,7 @@ def doCoRename(commit, tableData, trigger, relation=False, normalize=False):
     _logger.info(f'do co-rename relation = {relation}, normalize = {normalize}')
     triggerData = tableData.selectDataByRow(trigger)
     if triggerData is None:
+        recordOperation(commit, [])
         return []
     if relation:
         triggerDataDictCopy = deepcopy(triggerData.to_dict())
