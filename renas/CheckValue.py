@@ -10,9 +10,9 @@ from .util.Name import ExpandManager
 #newName = "isRequireClientSslAuth"
 
 def setRenameTest(oldName: dict, newName: str):
-    _rename = Rename(oldName, True)
+    _rename = Rename(oldName, True, True)
     _rename.setNewName(newName)
-    _rename.coRename(oldName)
+    print(_rename.coRename(oldName))
 
     #print(f"oldname = {_rename.getOld()}")
     #print(f"newname = {_rename.getNew()}")
@@ -66,23 +66,23 @@ def newNameSet2():
 #include 変更前単語省略後(H1)
 def oldNameSet3():
     oldName = {}
-    oldName["name"] = "stringBuilderSpecial"
-    oldName["split"] = ["super", "builder", "special"]
-    oldName["expanded"] = ["string","builder", "special"]
-    oldName["normalized"] = ["string", "builder", "special"]
+    oldName["name"] = "stringBuilderWellSpecial"
+    oldName["split"] = ["super", "builder", "well", "special"]
+    oldName["expanded"] = ["string","builder", "well", "special"]
+    oldName["normalized"] = ["string", "builder", "well", "special"]
     oldName["pattern"] = ["LCAMEL"]
-    oldName["delimiter"] = ";;;".split(';')
-    oldName["case"] = ["LOWER", "TITLE", "TITLE"]
-    oldName["postag"] = ['NN', 'NN', 'JJ']
-    oldName["heuristic"] = ["ST", "ST", "ST"]
+    oldName["delimiter"] = ";;;;".split(';')
+    oldName["case"] = ["LOWER", "TITLE", "TITLE", "TITLE"]
+    oldName["postag"] = ['NN', 'NN', 'NN', 'JJ']
+    oldName["heuristic"] = ["ST", "ST", "ST", "ST"]
     return oldName
 
 def newNameSet3():
     oldName = {}
-    oldName["name"] = "sbSpecial"
-    oldName["split"] = ["sb", "Special"]
-    oldName["expanded"] = ["string","builder", "special"]
-    oldName["normalized"] = ["string", "builder", "special"]
+    oldName["name"] = "sbwSpecial"
+    oldName["split"] = ["sbw", "Special"]
+    oldName["expanded"] = ["string","builder", "well", "special"]
+    oldName["normalized"] = ["string", "builder", "well", "special"]
     oldName["pattern"] = ["LCAMEL"]
     return oldName
 
@@ -136,35 +136,35 @@ def newNameSet5():
 #include 変更前単語省略後(H1)
 def oldNameSet6():
     oldName = {}
-    oldName["name"] = "sbSpecial"
-    oldName["split"] = ["sb", "special"]
-    oldName["expanded"] = ["string","builder", "special"]
-    oldName["normalized"] = ["string", "builder", "special"]
+    oldName["name"] = "sbwSpecial"
+    oldName["split"] = ["sbw", "special"]
+    oldName["expanded"] = ["string","builder", "well", "special"]
+    oldName["normalized"] = ["string", "builder", "well", "special"]
     oldName["pattern"] = ["LCAMEL"]
-    oldName["delimiter"] = ";;;".split(';')
-    oldName["case"] = ["LOWER", "TITLE", "TITLE"]
-    oldName["postag"] = ['NN', 'NN', 'JJ']
-    oldName["heuristic"] = ["H1", "H1", "ST"]
+    oldName["delimiter"] = ";;;;".split(';')
+    oldName["case"] = ["LOWER", "TITLE", "TITLE", "TITLE"]
+    oldName["postag"] = ['NN', 'NN', 'NN', 'JJ']
+    oldName["heuristic"] = ["H1", "H1", "H1", "ST"]
     return oldName
 
 def newNameSet6():
     oldName = {}
-    oldName["name"] = "stringBuilderSpecial"
-    oldName["split"] = ["string","builder", "special"]
-    oldName["expanded"] = ["string","builder", "special"]
-    oldName["normalized"] = ["string", "builder", "special"]
+    oldName["name"] = "stringBuilderWellSpecial"
+    oldName["split"] = ["string","builder", "well", "special"]
+    oldName["expanded"] = ["string","builder", "well", "special"]
+    oldName["normalized"] = ["string", "builder", "well", "special"]
     oldName["pattern"] = ["LCAMEL"]
-    oldName["delimiter"] = ";;;".split(';')
-    oldName["case"] = ["LOWER", "TITLE", "TITLE"]
-    oldName["postag"] = ['NN', 'NN', 'JJ']
-    oldName["heuristic"] = ["ST", "ST", "ST"]
+    oldName["delimiter"] = ";;;;".split(';')
+    oldName["case"] = ["LOWER", "TITLE", "TITLE", "TITLE"]
+    oldName["postag"] = ['NN', 'NN', 'NN', 'JJ']
+    oldName["heuristic"] = ["ST", "ST", "ST", "ST"]
     return oldName
 
 #em = ExpandManager("/Users/doinaoki/Documents/CodeTest/Osumi-OsmAnd/projects/OsmAnd/archives/30681c6f6485fc2314ea4b4e0841942db16ade43/record.json")
 #print(em.expand(newNameSet1()["split"], oldNameSet1()))
-#setRenameTest(oldNameSet1(), newNameSet1()["name"])
-#setRenameTest(oldNameSet2(), newNameSet2()["name"])
-#setRenameTest(oldNameSet3(), newNameSet3()["name"])
-#setRenameTest(oldNameSet4(), newNameSet4()["name"])
-#setRenameTest(oldNameSet5(), newNameSet5()["name"])
+setRenameTest(oldNameSet1(), newNameSet1()["name"])
+setRenameTest(oldNameSet2(), newNameSet2()["name"])
+setRenameTest(oldNameSet3(), newNameSet3()["name"])
+setRenameTest(oldNameSet4(), newNameSet4()["name"])
+setRenameTest(oldNameSet5(), newNameSet5()["name"])
 setRenameTest(oldNameSet6(), newNameSet6()["name"])

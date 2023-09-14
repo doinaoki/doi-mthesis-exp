@@ -311,11 +311,11 @@ class ExpandManager:
         if w != [word]:
             return w, hue
         
-        #同クラス内から探索
+        #同クラス内から探索 '''
+
         if beforeWordDic["files"] in self.__classRecordDict:
             if word in self.__classRecordDict[beforeWordDic["files"]]:
                 return self.Heuristics(word, self.__classRecordDict[beforeWordDic["files"]][word].split(" "))
-
         #record.jsonから探す(プロジェクト全体から探索)
         if word in self.__recordDict:
             return self.Heuristics(word, [max(self.__recordDict[word])])

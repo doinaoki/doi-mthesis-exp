@@ -20,11 +20,13 @@ from .util.Rename import Rename
 
 _logger = getLogger(__name__)
 
-researchFileNames = ["recommend_relation_normalize.json"]
-                #    "recommend_relation.json",
-                #    "recommend_none.json"]
+researchFileNames = {"recommend_relation_normalize.json": "Normalize",
+                    "recommend_relation.json": "None",
+                    "recommend_all_normalize.json": "all"}
 detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewname', 'op',
                 'commitPool', 'researchCommit', 'file', 'line', 'oldname' ,'truename', 'recommendname']]
+
+result_info = []
 
 gitRe = re.compile(r'(?:^commit)\s+(.+)\n(?:Merge:.+\n)?Author:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
 numberToCommit = {}
@@ -33,7 +35,6 @@ commitToNumber = {}
 commitToDate = {}
 recommendName = {}
 renameInfo = {}
-operations = {}
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -95,16 +96,16 @@ def setRename(path, fileName):
     return True
 
 
-def setOperations(path):
-    global operations
+def setOperations(path, op):
     filePath = os.path.join(path, "operations.json")
     with open(filePath, 'r') as f:
-        operations = json.load(f)
+        operations = json.load(f)[op]
+    return operations
 
 
 def getCommitsInfo(commit):
     #複数コミットの取り方
-    #dateが+5のコミットを含むようにする(仮)根拠なし
+    #dateが+2のコミットを含むようにする(仮)根拠なし
     researchCommits = []
     num = 2
     fromCommitDate = commitToDate[commit]
@@ -118,10 +119,11 @@ def getKey(dic):
     return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
 
 #Todo Dataframeで実装し直すべき
-def recommendCommit(commit, tableData):
+def recommendCommit(commit, tableData, operations):
     #調査体操となる複数コミットを取得
     researchCommits = getCommitsInfo(commit)
     opGroup = {}
+    detail_info.append(["start"])
 
     #operationごとにdicを作成する
     for c in researchCommits:
@@ -131,25 +133,28 @@ def recommendCommit(commit, tableData):
         goldset = renameInfo[c]
         for rDic in goldset:
             key = getKey(rDic)
-            if key not in operations["Relation-Normalize"][c]:
+            if key not in operations[c]:
                 print(f"something wrong {key}")
                 continue
-            ops = operations["Relation-Normalize"][c][key]
+            ops = operations[c][key]
             for op in ops:
                 #must change
                 if str(op) not in opGroup:
                     opGroup[str(op)] = []
                 opGroup[str(op)].append(rDic)
     
+    allRenames = 0
+    allRecommend = 0
+    allTrueRec = 0
 
     #調査するcommitからtriggerを選ぶ
     for trigger in renameInfo[commit]:
         # triggerを元にoperaion dicからrename情報を得る
         triggerKey = getKey(trigger)
-        if triggerKey not in operations["Relation-Normalize"][commit]:
+        if triggerKey not in operations[commit]:
             print(f"something wrong {triggerKey}")
             continue
-        triggerOp = operations["Relation-Normalize"][commit][triggerKey]
+        triggerOp = operations[commit][triggerKey]
         triggerRec = recommendName[triggerKey]
         renames = []
         for op in triggerOp:
@@ -186,10 +191,21 @@ def recommendCommit(commit, tableData):
             recall = trueRecommendCount / renameCount
             exacts = exactMatchCount / trueRecommendCount if trueRecommendCount != 0 else 0
             fscore = calcFScore(precision, recall)
+
+        allRenames += len(renames)
+        allRecommend += len(triggerRec)
+        allTrueRec += len(trueRecommendIndex)
         setDetail(commit, trigger, triggerOp, triggerRec, renames)
         print(f"operation chunk = {triggerOp}")
         print(f"precision = {precision},  recall = {recall},\
                exact = {exacts}, fscore = {fscore} ")
+    
+    detail_info.append(["allRenames", allRenames, "allRecommend", allRecommend,
+                        "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend,
+                         "recall", allTrueRec/allRenames ])
+    result_info.append(["allRenames", allRenames, "allRecommend", allRecommend,
+                        "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend,
+                         "recall", allTrueRec/allRenames ])
 
 
 def setDetail(commit, trigger, triggerOp, triggerRec, renames):
@@ -394,11 +410,12 @@ if __name__ ==  "__main__":
     args = setArgument()
     setLogger(INFO)
     setGitlog(args.source)
-    setOperations(args.source)
-    detailCSV = os.path.join(args.source,'detail.csv')  ##
+    detailCSV = os.path.join(args.source,'integrateDetail.csv')  ##
+    resultCSV = os.path.join(args.source,'integrateResult.csv') 
 
     #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
-    for fileName in researchFileNames:
+    for fileName, op in researchFileNames.items():
+        operations = setOperations(args.source, op)
         if not setRename(args.source, fileName):
             _logger.debug(f"{fileName} is not found")
             continue
@@ -407,8 +424,13 @@ if __name__ ==  "__main__":
         for commit in renameInfo.keys():
             tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
             tableData = ExTable(tablePath)
-            recommendCommit(commit, tableData)
+            recommendCommit(commit, tableData, operations)
 
     with open(detailCSV, 'w') as dCSV:
         w = csv.writer(dCSV)
         w.writerows(detail_info)
+    
+    with open(resultCSV, 'w') as dCSV:
+        w = csv.writer(dCSV)
+        w.writerows(result_info)
+

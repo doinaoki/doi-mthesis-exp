@@ -23,8 +23,9 @@ def setAbbrDic(abbrDicPath):
 
 # 命名規則の変化（POSタグ？、省略、Case、区切り文字）は扱いません。
 class Rename:
-    def __init__(self, old, normalize):
+    def __init__(self, old, normalize, all=False):
         self.__normalize = normalize
+        self.__all = all
         if isinstance(old, str):
             self.__old = self.__getNameDetail(old)
         elif isinstance(old, dict):
@@ -42,14 +43,9 @@ class Rename:
     
     def getNew(self):
         return self.__new
-
-    def getDiff(self):
-        return self.__diff
     
     def getOp(self):
-        if self.__normalize:
-            return ["Relation-Normalize", self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
-        return ["Relation", self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
+        return [self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
 
     def setNewName(self, newName):
         if self.__new == None:
@@ -117,12 +113,15 @@ class Rename:
         result = splitIdentifier(name)
         words = result['split']
 
-        if self.__normalize:
-            #_expandManager = ExpandManager("/Users/doinaoki/Documents/CodeTest/Osumi-saigen2/projects/ratpack/archives/beb8cabeedcdb42db742e808228408b1e2cc6513/record.json")
+        if self.__all:
             result["expanded"], result["heuristic"] = _expandManager.expand(words, self.__old)
             postags = _lemmatizer.getPosTags(result["expanded"])
             result['postag'] = postags
             result['normalized'] = _lemmatizer.normalize(result["expanded"], postags)
+        elif self.__normalize:
+            postags = _lemmatizer.getPosTags(words)
+            result['postag'] = postags
+            result['normalized'] = _lemmatizer.normalize(words, postags)
         else:
             postags = _lemmatizer.getPosTags(words)
             result['postag'] = postags
@@ -151,7 +150,7 @@ class Rename:
         if self.__diff == None:
             oldSplit = self.__old["normalized"]
             self.__diff = []
-            if self.__normalize == True:
+            if self.__all == True:
                 self.__diff += self.extractFormat()
                 self.__diff += self.extractChangeCase()
                 self.__diff += self.extractOrder()
@@ -184,6 +183,7 @@ class Rename:
         equalExpandedWordsIndex = [oldExpanded.index(word) for word in equalExpandedWords]
 
         abbrCandidate = equalExpandedWords-equalSplitWords
+        abbrCandidate = [i for i in oldExpanded if i in abbrCandidate]
         formatAbbreviation = []
         heuH1 = ["Abbreviation", "H1", []]
         for word in abbrCandidate:
@@ -208,7 +208,7 @@ class Rename:
         
     #変更操作changeCase抽出
     def extractChangeCase(self):
-        if self.__new["pattern"] != [] and self.__old["pattern"] != [] and self.__old["pattern"] != self.__new["pattern"]:
+        if self.__new["pattern"] != 'UNKNOWN' and self.__old["pattern"] != 'UNKNOWN' and self.__old["pattern"] != self.__new["pattern"]:
             return [["changeCase", (self.__old["pattern"], self.__new["pattern"])]]
         return [] 
 
@@ -285,11 +285,17 @@ class Rename:
                     else:
                         toAbbr.append([old, new])
                 if len(toExpan) >= 2:
-                #Todo must change
+                    n = len(toExpan)
+                    newExpan = []
+                    for i in range(2**n):
+                        exWord = ["",""]
+                        for k in range(n):
+                            if ((i >> k) & 1):
+                                exWord = [exWord[0]+toExpan[k][0], exWord[1]+toExpan[k][1]]
+                        if exWord != ["",""]:
+                            newExpan.append(exWord)
+                    toExpan = newExpan
 
-                    toExpan.append([toExpan[0][0]+toExpan[1][0], [toExpan[0][1]+toExpan[1][1]]])
-                    toExpan.append([toExpan[1][0]+toExpan[0][0], [toExpan[1][1]+toExpan[0][1]]])
-                #print(toExpan)
                 #Expan
                 for i in toExpan:
                     #this if statement is unnecessary
@@ -300,6 +306,14 @@ class Rename:
                     elif i[1] in oldDict["normalized"]:
                         id = oldDict["normalized"].index(i[1])
                         oldDict["heuristic"][id] = "ST"
+                for i in toAbbr:
+                    if i[0] in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(i[0])
+                        oldDict["normalized"][id] = i[1]
+                        oldDict["heuristic"][id] = "H1"
+                        oldDict["case"][id] = "LOWER"
+                        oldDict["pattern"] = "UNKNOWN"
+
             elif heu == "H2":
                 oldWord = format[2]
                 newWord = format[3]
@@ -315,6 +329,10 @@ class Rename:
                     return
                 else:
                     ##H2の省略語作成実装
+                    if oldWord in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(oldWord)
+                        oldDict["normalized"][id] = newWord
+                        oldDict["heuristic"][id] = "ST"
                     print("Abbreviation2")
                     return
             elif heu == "H3":
@@ -331,6 +349,10 @@ class Rename:
                     return
                 else:
                     ##H3の省略語作成実装
+                    if oldWord in oldDict["normalized"]:
+                        id = oldDict["normalized"].index(oldWord)
+                        oldDict["normalized"][id] = newWord
+                        oldDict["heuristic"][id] = "ST"
                     print("Abbreviation3")
                     return
         elif operation == "Normalize":
