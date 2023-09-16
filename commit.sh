@@ -7,7 +7,7 @@ cd $FILEPATH
 cp /dev/null $STOREPATH
 LOGCOMMIT=`git log | grep -n commit | awk '{ print $2 }'`
 COMMITBEFORE=1
-COMMITAFTER=6000
+COMMITAFTER=8800
 NOWCOMMIT=0
 echo "{" >> $STOREPATH
 echo "\"commits\": [" >> $STOREPATH

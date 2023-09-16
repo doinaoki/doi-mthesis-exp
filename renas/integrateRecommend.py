@@ -28,13 +28,11 @@ detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewna
 
 result_info = []
 
-gitRe = re.compile(r'(?:^commit)\s+(.+)\n(?:Merge:.+\n)?Author:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
+gitRe = re.compile(r'(?:^commit)\s+(.+)\nAuthor:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
 numberToCommit = {}
 dateToCommit = {}
 commitToNumber = {}
 commitToDate = {}
-recommendName = {}
-renameInfo = {}
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -66,7 +64,6 @@ def setGitlog(path):
         commit = info[0]
         author = info[1]
         dateInfo = datetime.strptime(info[2], '%a %b %d %H:%M:%S %Y %z')
-        key = dateInfo.strftime('%Y%m%d')
         commitToDate[commit] = dateInfo
         dateToCommit[dateInfo]= commit
 
@@ -84,7 +81,9 @@ def setRename(path, fileName):
 
     with open(filePath, 'r') as f:
         renames = json.load(f)
-    
+
+    recommendName = {}
+    renameInfo = {}
     for commit in renames.keys():
         renameInfo[commit] = renames[commit]["goldset"]
         for i in range(len(renames[commit]["goldset"])):
@@ -93,7 +92,7 @@ def setRename(path, fileName):
             triggerKey = getKey(trigger)
             recommendName[triggerKey] = recs
 
-    return True
+    return recommendName, renameInfo
 
 
 def setOperations(path, op):
@@ -119,7 +118,7 @@ def getKey(dic):
     return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
 
 #Todo Dataframeで実装し直すべき
-def recommendCommit(commit, tableData, operations):
+def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
     #調査体操となる複数コミットを取得
     researchCommits = getCommitsInfo(commit)
     opGroup = {}
@@ -180,7 +179,7 @@ def recommendCommit(commit, tableData, operations):
         else:
             #rename情報とrecommend情報を基に評価
             print(len(renames), len(triggerRec))
-            trueRecommendIndex = evaluate(renames, triggerRec)
+            trueRecommendIndex = evaluate(renames, triggerRec, tableData)
             trueRecommendCount = len(trueRecommendIndex)
             exactMatch = getExactMatch(renames, triggerRec, trueRecommendIndex)
             exactMatchCount = len(exactMatch)
@@ -195,19 +194,74 @@ def recommendCommit(commit, tableData, operations):
         allRenames += len(renames)
         allRecommend += len(triggerRec)
         allTrueRec += len(trueRecommendIndex)
-        setDetail(commit, trigger, triggerOp, triggerRec, renames)
+        setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData)
         print(f"operation chunk = {triggerOp}")
         print(f"precision = {precision},  recall = {recall},\
                exact = {exacts}, fscore = {fscore} ")
     
-    detail_info.append(["allRenames", allRenames, "allRecommend", allRecommend,
-                        "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend,
-                         "recall", allTrueRec/allRenames ])
-    result_info.append(["allRenames", allRenames, "allRecommend", allRecommend,
-                        "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend,
-                         "recall", allTrueRec/allRenames ])
+    detail_info.append([commit, "allRenames", allRenames, "allRecommend", allRecommend,
+                        "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend if allRecommend != 0 else 0,
+                         "recall", allTrueRec/allRenames if allRenames != 0 else 0])
+    result_info.append([commit, "allRenames", allRenames, "allRecommend", allRecommend,
+                        "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend if allRecommend != 0 else 0,
+                         "recall", allTrueRec/allRenames if allRenames != 0 else 0])
+    return allRenames, allRecommend, allTrueRec
 
+def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData):
+    commitPool = []
+    for r in renames:
+        if r["commit"] not in commitPool:
+            commitPool.append(r["commit"])
 
+    trueRecommendIndex = []
+    for i in range(len(renames)):
+        r = renames[i]
+        key = str([r["line"], r["typeOfIdentifier"], r["oldname"], r["files"]])
+        flag = False
+        for k in range(len(triggerRec)):
+            rec = triggerRec[k]
+            recKey = str([rec["line"], rec["typeOfIdentifier"], rec["name"], rec["files"]])
+            if key == recKey:
+                trueRecommendIndex.append([i, k])
+                flag = True
+                break
+        if flag:
+            continue
+        ri = canRecommendation(r, triggerRec, tableData)
+        if ri == None:
+            continue
+        trueRecommendIndex.append([i, ri])
+        print(i, ri)
+
+    for t in trueRecommendIndex:
+        detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
+                    str(triggerOp), commitPool, renames[t[0]]["commit"], renames[t[0]]["files"], str(renames[t[0]]["line"]), 
+                    renames[t[0]]["oldname"], renames[t[0]]["newname"], triggerRec[t[1]]["join"]]
+        detail_info.append(detail)
+
+    for t in range(len(renames)):
+        flag = True
+        for v in trueRecommendIndex:
+            if t == v[0]:
+                flag = False
+        if flag:
+            detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
+                str(triggerOp), commitPool, renames[t]["commit"], renames[t]["files"], str(renames[t]["line"]), 
+                renames[t]["oldname"], renames[t]["newname"], "NaN"]
+            detail_info.append(detail)
+
+    for t in range(len(triggerRec)):
+        flag = True
+        for v in trueRecommendIndex:
+            if t == v[1]:
+                flag = False
+        if flag:
+            detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
+                str(triggerOp), commitPool, commit, triggerRec[t]["files"], str(triggerRec[t]["line"]), 
+                triggerRec[t]["name"], "NaN", triggerRec[t]["join"]]
+            detail_info.append(detail)
+
+'''
 def setDetail(commit, trigger, triggerOp, triggerRec, renames):
     commitPool = []
     for r in renames:
@@ -246,7 +300,7 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames):
             str(triggerOp), commitPool, commit, triggerRec[t]["files"], str(triggerRec[t]["line"]), 
             triggerRec[t]["name"], "NaN", triggerRec[t]["join"]]
         detail_info.append(detail)
-
+'''
 
 def calcFScore(precision, recall):
     if precision == 0 or recall == 0:
@@ -266,23 +320,30 @@ def getExactMatch(renames, recommendation, indexes):
     _logger.debug(f'exact matches: {result}')
     return result
 
-def canRecommendation(rename, recommendation):
+def getRelationData(renameData, relation):
+    if not isinstance(renameData[relation], str):
+        return []
+    return renameData[relation].split(" - ")
+
+def canRecommendation(rename, recommendation, tableData):
     renameData = tableData.selectDataByRow(rename)
     if renameData is None:
-        return []
+        return None
     typeOfIdentifier = rename["typeOfIdentifier"]
     oldName = rename["oldname"]
     enclosingClass = renameData["enclosingCLass"]
     fileName = rename["files"]
     if typeOfIdentifier == "ClassName":
-        methods = renameData["methods"].split(" - ")
+        methods = getRelationData(renameData,"methods")
         for i in range(len(recommendation)):
             rec = recommendation[i]
+            if rec["typeOfIdentifier"] != typeOfIdentifier:
+                continue
             if oldName != rec["name"]:
                 continue
             if fileName != rec["files"]:
                 continue
-            recMethods = rec["methods"].split(" - ")
+            recMethods = getRelationData(rec,"methods")
             for method in methods:
                 if method == "":
                     continue
@@ -291,19 +352,23 @@ def canRecommendation(rename, recommendation):
         return None
 
     elif typeOfIdentifier == "MethodName":
-        siblings = renameData["siblings"].split(" - ")
+        siblings = getRelationData(renameData,"siblings")
         for i in range(len(recommendation)):
             rec = recommendation[i]
             if oldName != rec["name"]:
+                continue
+            if rec["typeOfIdentifier"] != typeOfIdentifier:
                 continue
             if enclosingClass != rec["enclosingCLass"]:
                 continue
             return i
         for i in range(len(recommendation)):
             rec = recommendation[i]
+            if rec["typeOfIdentifier"] != typeOfIdentifier:
+                continue
             if oldName != rec["name"]:
                 continue
-            recMethods = rec["siblings"].split(" - ")
+            recMethods = getRelationData(rec, "siblings")
             for method in siblings:
                 if method == "":
                     continue
@@ -312,9 +377,11 @@ def canRecommendation(rename, recommendation):
         return None
     
     elif typeOfIdentifier == "FieldName":
-        siblings = renameData["siblings"].split(" - ")
+        siblings = getRelationData(renameData ,"siblings")
         for i in range(len(recommendation)):
             rec = recommendation[i]
+            if rec["typeOfIdentifier"] != typeOfIdentifier:
+                continue
             if oldName != rec["name"]:
                 continue
             if enclosingClass != rec["enclosingCLass"]:
@@ -322,6 +389,8 @@ def canRecommendation(rename, recommendation):
             return i
         for i in range(len(recommendation)):
             rec = recommendation[i]
+            if rec["typeOfIdentifier"] != typeOfIdentifier:
+                continue
             if oldName != rec["name"]:
                 continue
             recFields = rec["siblings"]
@@ -339,6 +408,8 @@ def canRecommendation(rename, recommendation):
         enclosingMethods = renameData["enclosingMethod"]
         for i in range(len(recommendation)):
             rec = recommendation[i]
+            if rec["typeOfIdentifier"] != typeOfIdentifier:
+                continue
             if oldName != rec["name"]:
                 continue
             if enclosingClass != rec["enclosingCLass"]:
@@ -352,6 +423,8 @@ def canRecommendation(rename, recommendation):
         enclosingMethods = renameData["enclosingMethod"]
         for i in range(len(recommendation)):
             rec = recommendation[i]
+            if rec["typeOfIdentifier"] != typeOfIdentifier:
+                continue
             if oldName != rec["name"]:
                 continue
             if enclosingClass != rec["enclosingCLass"]:
@@ -364,7 +437,7 @@ def canRecommendation(rename, recommendation):
     else:
         _logger.error("unknown typeOfIdentifier")
 
-def evaluate(renames, recommendation):
+def evaluate(renames, recommendation, tableData):
     #print(len(renames), len(recommendation))
     if len(recommendation) == 0:
         return []
@@ -383,7 +456,7 @@ def evaluate(renames, recommendation):
                 break
         if flag:
             continue
-        ri = canRecommendation(r, recommendation)
+        ri = canRecommendation(r, recommendation, tableData)
         if ri == None:
             continue
         trueRecommendIndex.append([i, ri])
@@ -416,15 +489,29 @@ if __name__ ==  "__main__":
     #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
     for fileName, op in researchFileNames.items():
         operations = setOperations(args.source, op)
-        if not setRename(args.source, fileName):
-            _logger.debug(f"{fileName} is not found")
-            continue
+        recommendName, renameInfo = setRename(args.source, fileName)
+        result_info.append([fileName])
 
         _logger.debug(f"start researching {fileName}")
+        allRename = 0
+        allRec = 0
+        allTrue = 0
         for commit in renameInfo.keys():
+            if commit not in commitToDate:
+                continue
+            print(commit)
             tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
             tableData = ExTable(tablePath)
-            recommendCommit(commit, tableData, operations)
+            countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo)
+            allRename += countRename
+            allRec += countRec
+            allTrue += countTrue
+        
+        result_info.append(["allRenames", allRename, "allRecommend", allRec,
+                    "allTrueRecommend", allTrue, "precision", allTrue/allRec if allRec != 0 else 0,
+                        "recall", allTrue/allRename if allRename != 0 else 0])
+        result_info.append([""])
+
 
     with open(detailCSV, 'w') as dCSV:
         w = csv.writer(dCSV)

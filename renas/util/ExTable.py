@@ -44,7 +44,8 @@ class ExTable:
             _logger.debug(f'type filter: {len(result)}')
 
         if len(result) == 0:
-            _logger.warning(f'Not Found\n {renameRow.to_dict()}!')
+            if not isinstance(renameRow, dict):
+                _logger.warning(f'Not Found\n {renameRow.to_dict()}!')
             return None
         if len(result) != 1:
             _logger.warning(f'Cannot Identify DevRename {renameRow["oldname"]}\n')
