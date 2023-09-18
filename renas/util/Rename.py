@@ -229,14 +229,24 @@ class Rename:
                     oldOrder.append(oldWordsOrder[index])
                     newOrder.append(newWordsOrder[index])
             """
+            if not self.__checkUnique(oldWordsOrder):
+                return [] 
+            if not self.__checkUnique(newWordsOrder):
+                return []
             if len(oldWordsOrder) > 1 and oldWordsOrder != newWordsOrder:
                 order = ["order", (oldWordsOrder, newWordsOrder)]
                 self.__old["ordered"] = [word if word not in oldWordsOrder else newWordsOrder[oldWordsOrder.index(word)] for word in oldNormalize ]
                 _logger.debug(order)
+                print(f"extractOrder: {order}")
                 return [order]
             return []
 
         return []
+    
+    def __checkUnique(self, wordList):
+        if len(wordList) != len(set(wordList)):
+            return False
+        return True
 
 #todo 適用方法変更
     def __applyDiff(self, diff, oldDict):
@@ -301,7 +311,7 @@ class Rename:
                     #this if statement is unnecessary
                     if i[0] in oldDict["normalized"]:
                         id = oldDict["normalized"].index(i[0])
-                        oldDict["normalized"][id] = newWord
+                        oldDict["normalized"][id] = i[1]
                         oldDict["heuristic"][id] = "ST"
                     elif i[1] in oldDict["normalized"]:
                         id = oldDict["normalized"].index(i[1])
@@ -359,16 +369,21 @@ class Rename:
             pass
         else:
             _logger.error("undefined format operation")
-# Todo must case cange
+# Todo same word handling
     def __applyOrder(self, oldDict, order):
         oldWords = deepcopy(oldDict["normalized"])
         oldOrder = order[0]
         newOrder = order[1]
         useOrderWords = []
+        #print(oldWords)
         for w in oldWords:
             if w in oldOrder:
                 useOrderWords.append(w)
         if len(useOrderWords) <= 1:
+            return
+
+        #仮実装
+        if len(useOrderWords) != len(set(useOrderWords)):
             return
         
         orderedWords = []
@@ -382,7 +397,6 @@ class Rename:
                 newPostag.append(oldDict["postag"][oldId])
         if useOrderWords == orderedWords:
             return
-        #print(useOrderWords, orderedWords)
         for i in range(len(useOrderWords)):
             oldId = oldWords.index(useOrderWords[i])
             oldDict["normalized"][oldId] = orderedWords[i]

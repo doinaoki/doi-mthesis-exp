@@ -167,9 +167,13 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
         if len(renames) < 1:
             print(triggerOp)
             print("one rename is conducted")
+            trueRecommendIndex = []
+            precision = 0
+            recall = 0
+            exacts = 0
+            fscore = 0
             continue
-
-        if len(triggerRec) == 0:
+        elif len(triggerRec) == 0:
             print("No recommend")
             trueRecommendIndex = []
             precision = 0
@@ -208,7 +212,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
     return allRenames, allRecommend, allTrueRec
 
 def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData):
-    commitPool = []
+    commitPool = [commit]
     for r in renames:
         if r["commit"] not in commitPool:
             commitPool.append(r["commit"])
