@@ -63,18 +63,14 @@ class Rename:
     def coRename(self, idDict):
         if not self.__normalize:
             self.__overWriteDetail(idDict)
-        """
         if idDict == self.__old:
             _logger.debug('candidate is the same as trigger')
             return None
-        """
         _logger.debug(f'BEFORE {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
         beforeWordList = deepcopy(idDict[self.__wordColumn])
         # apply diff
         for diff in self.__diff:
             self.__applyDiff(diff, idDict)
-        #print(idDict)
-        #print(self.__diff)
         if idDict[self.__wordColumn] == beforeWordList:
             _logger.debug(f'not a candidate')
             return None

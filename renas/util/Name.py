@@ -306,6 +306,10 @@ class ExpandManager:
         if word in self.__englishSet:
             return [word], ["ST"]
         
+        #変更前の識別子でも展開されていない場合
+        if word in beforeWordDic["expanded"]:
+            return [word], ["ST"]
+        
         # 変更前の単語から探す
         w, hue = self.Heuristics(word, beforeWordDic["expanded"])
         if w != [word]:

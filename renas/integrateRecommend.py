@@ -20,7 +20,8 @@ from .util.Rename import Rename
 
 _logger = getLogger(__name__)
 
-researchFileNames = {"recommend_relation_normalize.json": "Normalize",
+researchFileNames = {"recommend_none.json": "None",
+                    "recommend_relation_normalize.json": "Normalize",
                     "recommend_relation.json": "None",
                     "recommend_all_normalize.json": "all"}
 detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewname', 'op',
@@ -118,7 +119,7 @@ def getKey(dic):
     return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
 
 #Todo Dataframeで実装し直すべき
-def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
+def recommendCommit(commit, tableData, operations, recommendName, renameInfo, none):
     #調査体操となる複数コミットを取得
     researchCommits = getCommitsInfo(commit)
     opGroup = {}
@@ -128,7 +129,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
     for c in researchCommits:
         if c not in renameInfo:
             continue
-        print(commit)
+        #print(commit)
         goldset = renameInfo[c]
         for rDic in goldset:
             key = getKey(rDic)
@@ -156,16 +157,20 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
         triggerOp = operations[commit][triggerKey]
         triggerRec = recommendName[triggerKey]
         renames = []
+        rKeys = []
         for op in triggerOp:
             if str(op) not in opGroup:
                 continue
             for rDic in opGroup[str(op)]:
                 if getKey(rDic) == triggerKey:
                     continue
+                if getKey(rDic) in rKeys:
+                    continue
+                rKeys.append(getKey(rDic))
                 renames.append(rDic)
 
         if len(renames) < 1:
-            print(triggerOp)
+            #print(triggerOp)
             print("one rename is conducted")
             trueRecommendIndex = []
             precision = 0
@@ -182,8 +187,8 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
             fscore = 0
         else:
             #rename情報とrecommend情報を基に評価
-            print(len(renames), len(triggerRec))
-            trueRecommendIndex = evaluate(renames, triggerRec, tableData)
+            #print(len(renames), len(triggerRec))
+            trueRecommendIndex = evaluate(renames, triggerRec, tableData, none)
             trueRecommendCount = len(trueRecommendIndex)
             exactMatch = getExactMatch(renames, triggerRec, trueRecommendIndex)
             exactMatchCount = len(exactMatch)
@@ -198,7 +203,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
         allRenames += len(renames)
         allRecommend += len(triggerRec)
         allTrueRec += len(trueRecommendIndex)
-        setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData)
+        setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none)
         print(f"operation chunk = {triggerOp}")
         print(f"precision = {precision},  recall = {recall},\
                exact = {exacts}, fscore = {fscore} ")
@@ -211,7 +216,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo):
                          "recall", allTrueRec/allRenames if allRenames != 0 else 0])
     return allRenames, allRecommend, allTrueRec
 
-def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData):
+def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none):
     commitPool = [commit]
     for r in renames:
         if r["commit"] not in commitPool:
@@ -229,18 +234,19 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData):
                 trueRecommendIndex.append([i, k])
                 flag = True
                 break
-        if flag:
-            continue
-        ri = canRecommendation(r, triggerRec, tableData)
-        if ri == None:
-            continue
-        trueRecommendIndex.append([i, ri])
-        print(i, ri)
+        if not none:
+            if flag:
+                continue
+            ri = canRecommendation(r, triggerRec, tableData)
+            if ri == None:
+                continue
+            trueRecommendIndex.append([i, ri])
+        #print(i, ri)
 
     for t in trueRecommendIndex:
         detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
                     str(triggerOp), commitPool, renames[t[0]]["commit"], renames[t[0]]["files"], str(renames[t[0]]["line"]), 
-                    renames[t[0]]["oldname"], renames[t[0]]["newname"], triggerRec[t[1]]["join"]]
+                    renames[t[0]]["oldname"], renames[t[0]]["newname"], triggerRec[t[1]]["join"], "NaN"]
         detail_info.append(detail)
 
     for t in range(len(renames)):
@@ -251,7 +257,7 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData):
         if flag:
             detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
                 str(triggerOp), commitPool, renames[t]["commit"], renames[t]["files"], str(renames[t]["line"]), 
-                renames[t]["oldname"], renames[t]["newname"], "NaN"]
+                renames[t]["oldname"], renames[t]["newname"], "NaN", "NaN"]
             detail_info.append(detail)
 
     for t in range(len(triggerRec)):
@@ -262,7 +268,7 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData):
         if flag:
             detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
                 str(triggerOp), commitPool, commit, triggerRec[t]["files"], str(triggerRec[t]["line"]), 
-                triggerRec[t]["name"], "NaN", triggerRec[t]["join"]]
+                triggerRec[t]["name"], "NaN", triggerRec[t]["join"] , "NaN"]
             detail_info.append(detail)
 
 '''
@@ -441,7 +447,7 @@ def canRecommendation(rename, recommendation, tableData):
     else:
         _logger.error("unknown typeOfIdentifier")
 
-def evaluate(renames, recommendation, tableData):
+def evaluate(renames, recommendation, tableData, none):
     #print(len(renames), len(recommendation))
     if len(recommendation) == 0:
         return []
@@ -458,13 +464,14 @@ def evaluate(renames, recommendation, tableData):
                 trueRecommendIndex.append([i, k])
                 flag = True
                 break
-        if flag:
-            continue
-        ri = canRecommendation(r, recommendation, tableData)
-        if ri == None:
-            continue
-        trueRecommendIndex.append([i, ri])
-        print(i, ri)
+        if not none:
+            if flag:
+                continue
+            ri = canRecommendation(r, recommendation, tableData)
+            if ri == None:
+                continue
+            trueRecommendIndex.append([i, ri])
+        #print(i, ri)
                 
     '''
     rIdentifier = []
@@ -478,7 +485,7 @@ def evaluate(renames, recommendation, tableData):
     trueRecommend = list(set(rIdentifier) & set(recIdentifier))
     trueRecommendIndex = [(rIdentifier.index(t), recIdentifier.index(t)) for t in trueRecommend]
     '''
-    print(trueRecommendIndex)
+    #print(trueRecommendIndex)
     #print(f"recall = {len(trueRecommend)/len(renames)}, precision = {len(trueRecommend)/len(recommendation)}")
     return trueRecommendIndex
 
@@ -492,7 +499,7 @@ if __name__ ==  "__main__":
 
     #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
     for fileName, op in researchFileNames.items():
-        operations = setOperations(args.source, op)
+        operations = setOperations(args.source, "all")
         recommendName, renameInfo = setRename(args.source, fileName)
         result_info.append([fileName])
 
@@ -503,10 +510,13 @@ if __name__ ==  "__main__":
         for commit in renameInfo.keys():
             if commit not in commitToDate:
                 continue
-            print(commit)
+            #print(commit)
             tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
             tableData = ExTable(tablePath)
-            countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo)
+            if fileName == "recommend_none.json":
+                countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, True)
+            else:
+                countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, False)
             allRename += countRename
             allRec += countRec
             allTrue += countTrue
@@ -515,6 +525,8 @@ if __name__ ==  "__main__":
                     "allTrueRecommend", allTrue, "precision", allTrue/allRec if allRec != 0 else 0,
                         "recall", allTrue/allRename if allRename != 0 else 0])
         result_info.append([""])
+    
+
 
 
     with open(detailCSV, 'w') as dCSV:
