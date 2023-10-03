@@ -26,6 +26,10 @@ RESULT_COLUMNS = [
     'relation_normalize_recall',
     'relation_normalize_fscore',
     'relation_normalize_exact',
+    'all_normalize_precision',
+    'all_normalize_recall',
+    'all_normalize_fscore',
+    'all_normalize_exact'
     ]
 _logger = getLogger(__name__)
 _logger.setLevel(DEBUG)
@@ -53,12 +57,13 @@ def loadJsons(root):
     nonePath = root.joinpath('recommend_none.json')
     relationPath = root.joinpath('recommend_relation.json')
     relationNormalizePath = root.joinpath('recommend_relation_normalize.json')
+    allNormalizePath = root.joinpath('recommend_all_normalize.json')
     if not os.path.exists(nonePath) \
         or not os.path.exists(relationPath) \
         or not os.path.exists(relationNormalizePath):
         _logger.error(f'{root} recommend results do not exist. Run recommendation.py first.')
         return None, None, None
-    return _loadJson(nonePath), _loadJson(relationPath), _loadJson(relationNormalizePath)
+    return _loadJson(nonePath), _loadJson(relationPath), _loadJson(relationNormalizePath), _loadJson(allNormalizePath)
 
 def _loadJson(jsonPath):
     with open(jsonPath, 'r') as f:
@@ -67,7 +72,7 @@ def _loadJson(jsonPath):
 
 def evaluate(root):
     _logger.info(f'{root} start evaluation')
-    noneJson, relationJson, relationNormalizeJson = loadJsons(root)
+    noneJson, relationJson, relationNormalizeJson, allNormalizeJson = loadJsons(root)
     detailCSV = root.joinpath('detail.csv')  ##
     detail_info = [['commit', 'line','oldchangename', 'newchangename', 'originpass','oldname' ,'truename', 'recommendname', 'recommendpass', 'line']]
     if noneJson is None:
@@ -84,6 +89,8 @@ def evaluate(root):
         relationResult = evaluateCommit(goldSet, relationJson[c])
         #print("relation_Normalize")
         relationNormalizeResult = evaluateCommit(goldSet, relationNormalizeJson[c])
+
+        allNormalizeResult = evaluateCommit(goldSet, allNormalizeJson[c])
         detailEvaluateCommit(goldSet, relationNormalizeJson[c], detail_info, c)
         
         with open(detailCSV, 'w') as dCSV:
@@ -101,7 +108,7 @@ def evaluate(root):
         #     relationNormalizeResult[FSCORE_INDEX] == 0:
         #     _logger.info(f'none of three can recommend, skip this commit')
         #     continue
-        results.append((c, goldSetSize, description, *noneResult, *relationResult, *relationNormalizeResult))
+        results.append((c, goldSetSize, description, *noneResult, *relationResult, *relationNormalizeResult, *allNormalizeResult))
     return pd.DataFrame.from_records(results, columns=RESULT_COLUMNS)
 
 def detailEvaluateCommit(goldSet, commitRecommendData, detail_info, commit):
@@ -143,6 +150,8 @@ def detailEvaluateCommit(goldSet, commitRecommendData, detail_info, commit):
 def evaluateCommit(goldSet, commitRecommendData):
     goldSetSize = goldSet.shape[0]
     positiveCount = goldSetSize - 1
+    if positiveCount == 0:
+        return 0,0,0,0
     precisions = []
     recalls = []
     fscores = []

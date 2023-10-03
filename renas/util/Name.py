@@ -8,6 +8,7 @@ from nltk.tag import pos_tag
 from nltk.stem import WordNetLemmatizer 
 from nltk.corpus import wordnet
 from pattern.en import conjugate, pluralize, comparative, superlative
+import os
 
 from logging import getLogger, DEBUG, StreamHandler
 
@@ -228,3 +229,141 @@ class AbbreviationManager:
                 return self.__abbrDict[heuristic][word]
             else:
                 return word
+            
+
+class ExpandManager:
+    def __init__(self, dictPath) -> None:
+        self.__abbrPath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "AbbreviationDataset")
+        with open(os.path.join(self.__abbrPath, "EnglishDic.txt"), "r") as f:
+            self.__englishSet = set(f.read().split("\n"))
+        
+        self.__classRecordDict = {}
+        with open(os.path.join(os.path.dirname(dictPath), "classRecord.json"), 'r') as f:
+            __classRecordJson = json.load(f)
+        for className, records in __classRecordJson.items():
+            self.__classRecordDict[className] = {}
+            temp = {}
+            for rec, count in records.items():
+                abbr, expan = rec.split("==")
+                if abbr in temp:
+                    if count > temp[abbr]:
+                        temp[abbr] = count
+                        self.__classRecordDict[className][abbr] = expan
+                else:
+                    self.__classRecordDict[className][abbr] = expan
+                    
+
+        self.__recordDict = {}
+        with open(dictPath, 'r') as f:
+            __recordJson = json.load(f)
+        for records in __recordJson.values():
+            for k, v in records.items():
+                if v in self.__recordDict:
+                    self.__recordDict[v].append(k)
+                else:
+                    self.__recordDict[v] = [k]
+
+        self.__expandDict = {}
+        self.addAbbrDic()
+        #print(self.__expandDict)
+        #print(len(self.__expandDict))
+        #print(len(self.__englishSet))
+        pass
+
+    def addAbbrDic(self):
+        with open(os.path.join(self.__abbrPath, "abbrDic.txt"), "r") as f:
+            for abbrData in f:
+                abbr, expan = abbrData.split(":=")
+                if abbr in self.__expandDict:
+                    self.__expandDict[abbr].add(expan.rstrip("\n"))
+                else:
+                    self.__expandDict[abbr] = {expan.rstrip("\n")}
+    
+    #必要だと感じたら実装
+    def addAbbrDataset(self, Dict):
+        pass
+
+
+    def expand(self, words, beforeWordDic):
+        identifier = []
+        heuList = []
+        for word in words:
+            identifiers, hue = self.expandWord(word, beforeWordDic)
+            for i in range(len(identifiers)):
+                identifier.append(identifiers[i])
+                heuList.append(hue[i])
+        return identifier, heuList
+
+    '''
+        identifierList = [self.expandWord(word, beforeWordDic) for word in words]
+        identifier = []
+        for i in identifierList:
+            identifier += i
+        return identifier
+    '''
+    def expandWord(self, word, beforeWordDic):
+        # 省略後か確認
+        if word in self.__englishSet:
+            return [word], ["ST"]
+        
+        #変更前の識別子でも展開されていない場合
+        if word in beforeWordDic["expanded"]:
+            return [word], ["ST"]
+        
+        # 変更前の単語から探す
+        w, hue = self.Heuristics(word, beforeWordDic["expanded"])
+        if w != [word]:
+            return w, hue
+        
+        #同クラス内から探索 '''
+
+        if beforeWordDic["files"] in self.__classRecordDict:
+            if word in self.__classRecordDict[beforeWordDic["files"]]:
+                return self.Heuristics(word, self.__classRecordDict[beforeWordDic["files"]][word].split(" "))
+        #record.jsonから探す(プロジェクト全体から探索)
+        if word in self.__recordDict:
+            return self.Heuristics(word, [max(self.__recordDict[word])])
+
+        #省略後のデータセットから探す
+        if word in self.__expandDict:
+            return self.Heuristics(word, [max(list(self.__expandDict[word]))])
+
+        return [word], ["ST"]
+    
+
+    #acronym, prefix, dropped-letterを探索
+    def Heuristics(self, word, beforeWords):
+        #acromym
+        if len(word) != 1 and len(word) <= len(beforeWords):
+            for i in range(len(beforeWords)-len(word)):
+                candidateWords = []
+                for j in range(i, len(word)+i):
+                    candidateWords.append(beforeWords[j][0])
+                
+                if "".join(candidateWords) == word:
+                    print("acronym", word)
+                    return [beforeWords[w] for w in range(i, len(word))], ["H1" for _ in range(len(word))]
+        
+        #prefix
+        candidateWords = []
+        for beforeword in beforeWords:
+            if beforeword.startswith(word):
+                candidateWords.append(beforeword)
+        if candidateWords != []:
+            print("prefix", max(candidateWords))
+            return [max(candidateWords)], ["H2"]
+        
+        #dropped-letter
+        for beforeword in beforeWords:
+            if beforeword[0] != word[0]:
+                continue
+            j = 0
+            for i in range(len(beforeword)):
+                if j < len(word) and word[j] == beforeword[i]:
+                    j += 1
+            
+            if j == len(word):
+                print("dropped-letter", word)
+                return [beforeword], ["H3"]
+        
+        return [word], ["ST"]

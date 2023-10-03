@@ -14,6 +14,7 @@ from copy import deepcopy
 
 _logger = getLogger(__name__)
 _logger.setLevel(DEBUG)
+operationDic = {"all": {}, "Normalize": {}, "None": {}}
 _RELATION_LIST = [
     "subclass","subsubclass","parents","ancestor","methods","fields","siblings","comemnt","type","enclosingCLass","assignment","methodInvocated","parameterArgument","parameter","enclosingMethod","argument"
 ]
@@ -65,16 +66,36 @@ def getRelatedIds(relationSeries):
         relatedIds.update(id.split(':')[0] for id in ids.split(' - '))
     return relatedIds
 
+def recordOperation(commit, op,normalize, all, exception={}):
+    opType = ""
+    if all:
+        opType = "all"
+    elif normalize:
+        opType = "Normalize"
+    else:
+        opType = "None"
+    if len(exception) != 0:
+        key = exception["commit"]+exception["files"]+str(exception["line"])+exception["oldname"]
+        if commit not in operationDic[opType]:
+            operationDic[opType][commit] = {}
+        operationDic[opType][commit][key] = []
+        return
+    if commit not in operationDic[opType]:
+        operationDic[opType][commit] = {}
+    operationDic[opType][commit][commit+op[0]] = op[1]
 
-def doCoRename(tableData, trigger, relation=False, normalize=False):
+# トリガーとなるRenameを設定.(operational chunkの抽出)
+def doCoRename(commit, tableData, trigger, relation=False, normalize=False, all=False):
     _logger.info(f'do co-rename relation = {relation}, normalize = {normalize}')
     triggerData = tableData.selectDataByRow(trigger)
     if triggerData is None:
+        recordOperation(commit, [], normalize, all, exception=trigger)
         return []
     if relation:
         triggerDataDictCopy = deepcopy(triggerData.to_dict())
-        triggerRename = Rename(triggerDataDictCopy, normalize=normalize)
+        triggerRename = Rename(triggerDataDictCopy, normalize=normalize, all=all)
         triggerRename.setNewName(trigger['newname'])
+        recordOperation(commit, triggerRename.getOp(), normalize, all)
         return coRenameRelation(tableData, triggerData, triggerRename)
     else:
         triggerDataDictCopy = deepcopy(triggerData[_IDENTIFIER_LIST].to_dict())
@@ -89,7 +110,7 @@ def coRenameNone(tableData, triggerRename):
     result = [r for r in recommends if r is not None]
     return result
 
-
+# 他のRenameも推薦できるか見る
 def coRenameRelation(tableData, triggerData, triggerRename):
     triedIds = {triggerData['id']}
     nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
@@ -135,9 +156,12 @@ def recommend(repo, force):
     resultNone = {}
     resultRelation = {}
     resultRelationNormalize = {}
+    resultAllNormalize = {}
     outputNone = root.joinpath('recommend_none.json')
     outputRelation = root.joinpath('recommend_relation.json')
     outputRelationNormalize = root.joinpath('recommend_relation_normalize.json')
+    outputAllNormalize = root.joinpath('recommend_all_normalize.json')
+    outputOperation = root.joinpath('operations.json')
 
     #既に作られている場合終了
     if not force and \
@@ -171,6 +195,9 @@ def recommend(repo, force):
         resultRelationNormalize[commit] = {}
         resultRelationNormalize[commit]['goldset'] = goldSet.to_dict(orient='records')
 
+        resultAllNormalize[commit] = {}
+        resultAllNormalize[commit]['goldset'] = goldSet.to_dict(orient='record')
+
         size = goldSet.shape[0]
         for gIdx in range(size):
             trigger = goldSet.iloc[gIdx]
@@ -178,12 +205,13 @@ def recommend(repo, force):
             commitStartTime = time.time()
             # all
             _logger.info(f'start recommend: {commit} | {gIdx}')
-            resultNone[commit][gIdx] = doCoRename(tableData, trigger)
+            resultNone[commit][gIdx] = doCoRename(commit, tableData, trigger)
             # relation
-            resultRelation[commit][gIdx] = doCoRename(tableData, trigger, relation=True)
+            resultRelation[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True)
             # relation normalize
-            resultRelationNormalize[commit][gIdx] = doCoRename(tableData, trigger, relation=True, normalize=True)
-            # 
+            resultRelationNormalize[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True, normalize=True)
+            # all normalize
+            resultAllNormalize[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True, normalize=True, all=True)
             commitEndTime = time.time()
             _logger.info(f'end recommend: {commit} | {gIdx}')
             _logger.info(f'commit elapsed time: {timedelta(seconds=(commitEndTime - commitStartTime))}')
@@ -191,11 +219,15 @@ def recommend(repo, force):
     _logger.info('export result')
     with open(outputNone, 'w') as ON, \
             open(outputRelation, 'w') as OR, \
-            open(outputRelationNormalize, 'w') as ORN:
+            open(outputRelationNormalize, 'w') as ORN, \
+            open(outputAllNormalize, 'w') as OAN:
         simplejson.dump(resultNone, ON, indent=4, ignore_nan=True)
         simplejson.dump(resultRelation, OR, indent=4, ignore_nan=True)
         simplejson.dump(resultRelationNormalize, ORN, indent=4, ignore_nan=True)
+        simplejson.dump(resultAllNormalize, OAN, indent=4, ignore_nan=True)
 
+    with open(outputOperation, 'w') as oo:
+        simplejson.dump(operationDic, oo, indent=4, ignore_nan=True)
     endTime = time.time()
     _logger.info(f'elapsed time: {timedelta(seconds=(endTime - startTime))}')
 

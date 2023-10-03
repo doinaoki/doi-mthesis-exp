@@ -42,7 +42,7 @@ if __name__ == '__main__':
     csvRoot = pathlib.Path(args.dir)
     csvFile = csvRoot.joinpath('exTable.csv')
     csvGzFile = csvRoot.joinpath('exTable.csv.gz')
-
+    '''
     try:
         identifierList = pd.read_csv(csvGzFile)
         identifierList['expanded'] = identifierList['expanded'].map(
@@ -52,7 +52,14 @@ if __name__ == '__main__':
         identifierList = pd.read_csv(csvFile)
         identifierList['expanded'] = identifierList['expanded'].map(lambda x: str(x).split(';'))
         identifierList['heuristic'] = identifierList['heuristic'].map(lambda x: str(x).split(';'))
-    
+    '''
+    try:
+        identifierList = pd.read_csv(csvFile)
+        identifierList['expanded'] = identifierList['expanded'].map(lambda x: str(x).split(';'))
+        identifierList['heuristic'] = identifierList['heuristic'].map(lambda x: str(x).split(';'))
+    except:
+        print("error")
+        exit(1)
     expanded = identifierList['expanded'].values
     posTagRows = []
     NormalizedRows = []

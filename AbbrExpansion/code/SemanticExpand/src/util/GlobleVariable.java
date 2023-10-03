@@ -5,7 +5,8 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 
 public class GlobleVariable {
-    public static Path dicRoot = Paths.get("AbbrExpansion/code/SemanticExpand/dic");
+    public static Path dicRoot = Paths.get("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/AbbrExpansion/code/SemanticExpand/dic");
+    //public static Path dicRoot = Paths.get("AbbrExpansion/code/SemanticExpand/dic");
     public static String englishDicFile = dicRoot.resolve("EnglishDic.txt").toString();
     public static String abbrDicFile = dicRoot.resolve("abbrDic.txt").toString();
     public static String computerAbbrDicFile = dicRoot.resolve("computerAbbr.txt").toString();

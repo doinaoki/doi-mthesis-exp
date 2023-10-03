@@ -64,11 +64,14 @@ public class Parse {
 	}
 
 	private String[] getSourcepathEntries(String[] sourcepathStrings) {
+		//package名抽出用pattern
 		Pattern pattern = Pattern.compile("(?<=^package ).+(?=;$)");
 		HashSet<String> entries = new HashSet<>();
+		//.javaの全ファイルを見る
 		for (String ss : sourcepathStrings) {
 			Path ap = Paths.get(ss);
 			Path fName = ap.getFileName();
+			//ファイル内のすべての行を読み込む
 			try (Stream<String> lines = Files.lines(ap)) {
 				Matcher m = lines.map(pattern::matcher)
 						.filter(Matcher::find)

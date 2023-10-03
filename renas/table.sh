@@ -7,6 +7,10 @@ while getopts "f" opt; do
             ;;
     esac
 done
+
+set -e
+archive=${1%/}
+
 shift $(expr $OPTIND - 1) # remove option args
 JARPATH="AbbrExpansion/out"
 PARSECODE="ParseCode.jar"
@@ -26,12 +30,10 @@ VERSION=$(bash --version | head -n 1 | sed -E 's/^.* ([0-9.]+)\.[0-9]+\([0-9]+\)
 #     echo "bash version must be 4.3 or later"
 #     exit
 # fi
-
 # renas
-set -e
-archive=${1%/}
 echo "${archive}"
 echo "start creating table."
+FORCE="TRUE"
 
 # remove jar signature
 if [ -n "$(zipinfo -1 ${JARPATH}/${PARSECODE} | grep META-INF/.*SF)" ]; then
@@ -44,8 +46,14 @@ if [ "$FORCE" = "TRUE" ] || [ ! -f "${GZIP_EXTABLE_PATH}" ]; then
     repo=${archive}"/repo"
     # parse code
     java -jar "${JARPATH}/${PARSECODE}" "${archive}"
+
+    cd "AbbrExpansion/code/SemanticExpand"
+
+    ./gradlew run --args "${archive}"
+
+    cd ../../..
     # semantic expand
-    java -jar "${JARPATH}/${SEMANTICEXPAND}" "${archive}"
+    #java -jar "AbbrExpansion/code/SemanticExpand/out/libs/${SEMANTICEXPAND}" "${archive}"
     # normalize
     python3 -m renas.normalize "${archive}"
     # gzip

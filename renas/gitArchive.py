@@ -48,7 +48,7 @@ def filterData(data):
     filter = map(__containAbbr, data['oldname'], data['newname'])
     filtered = data[pd.Series(filter)]
     commits = filtered.groupby('commit').size()
-    commits = commits[commits > 1]
+    commits = commits[commits > 0]
     LOGGER.info(f'{len(commits)} commits may contain abbreviation rename')
     LOGGER.info(f'total {commits.sum()} renames')
     #commits = commits.sample(frac=0.1, random_state=0)
@@ -57,22 +57,7 @@ def filterData(data):
     return data[data['commit'].isin(commits.index)]
 
 def __containAbbr(oldName, newName):
-    key = (oldName, newName)
-    if key in WORD_CACHE:
-        return WORD_CACHE[key]
-
-    rename = Rename(oldName, normalize=True)
-    rename.setNewName(newName)
-    diff = rename.getDiff()
-    for d in diff: 
-        for words in d[1:]:
-            for w in words:
-                if w not in ENGLISH_DIC:
-                    LOGGER.debug(f'{w} may be an abbreviation')
-                    WORD_CACHE[key] = True
-                    return True
-    WORD_CACHE[key] = False
-    return False
+    return True
 
 def gitArchive(root, directory, sha1):
     try:

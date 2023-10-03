@@ -36,15 +36,16 @@ def setLogger(level):
 
 
 def filterZero(merged):
-    return merged.query('none_fscore > 0 or relation_fscore > 0 or relation_normalize_fscore > 0')
+    return merged.query('none_fscore > 0 or relation_fscore > 0 or relation_normalize_fscore > 0 or all_normalize_fscore > 0')
 
 
 def calcTotal(merged, name):
     totalNone = np.nanmean(merged[f'none_{name}'])
     totalRelation = np.nanmean(merged[f'relation_{name}'])
     totalRelationNormalize = np.nanmean(merged[f'relation_normalize_{name}'])
+    totalAllNormalize = np.nanmean(merged[f'all_normalize_{name}'])
     _logger.info(f'{name}:\n none {totalNone}, relation {totalRelation}, relation normalize {totalRelationNormalize}')
-    return totalNone, totalRelation, totalRelationNormalize
+    return totalNone, totalRelation, totalRelationNormalize, totalAllNormalize
 
 
 def countNan(merged, name):
@@ -60,16 +61,19 @@ def plotResult(merged, output):
     none = merged[['none_precision', 'none_recall', 'none_fscore', 'none_exact']]
     rel = merged[['relation_precision', 'relation_recall', 'relation_fscore', 'relation_exact']]
     nor = merged[['relation_normalize_precision', 'relation_normalize_recall', 'relation_normalize_fscore', 'relation_normalize_exact']]
+    all = merged[['all_normalize_precision', 'all_normalize_recall', 'all_normalize_fscore', 'all_normalize_exact']]
     # position
     rel_x = np.array([1, 2.5, 4, 5.5])
     none_x = rel_x - 0.3
     nor_x = rel_x + 0.3
+    all_x = rel_x + 0.6
     # plot
     fig = plt.figure(figsize=[8, 4.5])
     ax = fig.add_subplot(1, 1, 1)
     vp1, color1 = violinplot(ax, [none[col].dropna() for col in none], none_x)
     vp2, color2 = violinplot(ax, [rel[col].dropna() for col in rel], rel_x)
     vp3, color3 = violinplot(ax, [nor[col].dropna() for col in nor], nor_x)
+    vp4, color4 = violinplot(ax, [all[col].dropna() for col in all], all_x)
     # bp = ax.boxplot(none, showmeans=True, patch_artist=True, widths=0.3)
     ax.set_xticks(rel_x)
     ax.set_xticklabels(['適合率', '再現率', 'F値', '一致率'])
@@ -82,6 +86,7 @@ def plotResult(merged, output):
         (mpatches.Patch(color=color1), 'None'),
         (mpatches.Patch(color=color2), 'Relation'),
         (mpatches.Patch(color=color3), 'RENAS'),
+        (mpatches.Patch(color=color4), 'ALL'),
         ]
     fig.legend(*zip(*labels), fontsize=16, bbox_to_anchor=(1.12, 0.88), borderaxespad=0)
     plt.savefig(output, bbox_inches='tight')
@@ -128,8 +133,8 @@ if __name__ == '__main__':
     _logger.info(f'filter-after\n {filter_merged.shape[0]}')
     _logger.info(f'merged\n {merged}')
 
-    nPre, rPre, rnPre = calcTotal(filter_merged, 'precision')
-    nRec, rRec, rnRec = calcTotal(filter_merged, 'recall')
+    nPre, rPre, rnPre, alPre = calcTotal(filter_merged, 'precision')
+    nRec, rRec, rnRec, alRec = calcTotal(filter_merged, 'recall')
     calcTotal(filter_merged, 'fscore')
     calcTotal(filter_merged, 'exact')
     countNan(filter_merged, 'none')
