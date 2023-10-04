@@ -264,7 +264,9 @@ class ExpandManager:
                     self.__recordDict[v] = [k]
 
         self.__expandDict = {}
+        self.__skipDict = {}
         self.addAbbrDic()
+        self.skipAbbrDic()
         #print(self.__expandDict)
         #print(len(self.__expandDict))
         #print(len(self.__englishSet))
@@ -279,6 +281,14 @@ class ExpandManager:
                 else:
                     self.__expandDict[abbr] = {expan.rstrip("\n")}
     
+    def skipAbbrDic(self):
+        with open(os.path.join(self.__abbrPath, "computerAbbr.txt"), "r") as f:
+            for abbrData in f:
+                abbr, expan = abbrData.split(":=")
+                splitWord = expan.rstrip("\n").split(" ")
+                if len(splitWord) >= 3:
+                    self.__skipDict[abbr.lower()] = [w.lower for w in splitWord]
+    
     #必要だと感じたら実装
     def addAbbrDataset(self, Dict):
         pass
@@ -288,7 +298,11 @@ class ExpandManager:
         identifier = []
         heuList = []
         for word in words:
-            identifiers, hue = self.expandWord(word, beforeWordDic)
+            identifiers, hue = self.expandWord(word, beforeWordDic)                
+            if word in self.__skipDict:
+                if hue != ["H1"]*len(word):
+                    identifiers = [word]
+                    hue = ["ST"]
             for i in range(len(identifiers)):
                 identifier.append(identifiers[i])
                 heuList.append(hue[i])
@@ -309,7 +323,7 @@ class ExpandManager:
         #変更前の識別子でも展開されていない場合
         if word in beforeWordDic["expanded"]:
             return [word], ["ST"]
-        
+
         # 変更前の単語から探す
         w, hue = self.Heuristics(word, beforeWordDic["expanded"])
         if w != [word]:
@@ -326,7 +340,7 @@ class ExpandManager:
 
         #省略後のデータセットから探す
         if word in self.__expandDict:
-            return self.Heuristics(word, [max(list(self.__expandDict[word]))])
+            return self.Heuristics(word, max(list(self.__expandDict[word])).split(" "))
 
         return [word], ["ST"]
     
@@ -335,14 +349,14 @@ class ExpandManager:
     def Heuristics(self, word, beforeWords):
         #acromym
         if len(word) != 1 and len(word) <= len(beforeWords):
-            for i in range(len(beforeWords)-len(word)):
+            for i in range(len(beforeWords)-len(word)+1):
                 candidateWords = []
                 for j in range(i, len(word)+i):
                     candidateWords.append(beforeWords[j][0])
                 
                 if "".join(candidateWords) == word:
                     print("acronym", word)
-                    return [beforeWords[w] for w in range(i, len(word))], ["H1" for _ in range(len(word))]
+                    return [beforeWords[w] for w in range(i, len(word)+i)], ["H1" for _ in range(len(word))]
         
         #prefix
         candidateWords = []

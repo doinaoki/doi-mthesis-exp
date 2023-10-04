@@ -13,8 +13,8 @@ _caseManager = CaseManager()
 _expandManager = None
 _logger = getLogger('util.Rename')
 _logger.setLevel(DEBUG)
-#_abbrManager = AbbreviationManager("/Users/doinaoki/Documents/CodeTest/Osumi-saigen2/projects/ratpack/archives/beb8cabeedcdb42db742e808228408b1e2cc6513/record.json")
-
+#_abbrManager = AbbreviationManager("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/projects/open-keychain/archives/a8782272b3db20ba6e88acab1d035d4699aa7166/record.json")
+#_expandManager = ExpandManager("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/projects/open-keychain/archives/a8782272b3db20ba6e88acab1d035d4699aa7166/record.json")
 def setAbbrDic(abbrDicPath):
     global _abbrManager, _expandManager
     _abbrManager = AbbreviationManager(abbrDicPath)
@@ -48,6 +48,7 @@ class Rename:
         return [self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
 
     def setNewName(self, newName):
+        #self.__all = True
         if self.__new == None:
             self.__new = self.__getNameDetail(newName)
             self.newSetDiff()
@@ -63,9 +64,11 @@ class Rename:
     def coRename(self, idDict):
         if not self.__normalize:
             self.__overWriteDetail(idDict)
+        '''
         if idDict == self.__old:
             _logger.debug('candidate is the same as trigger')
             return None
+        '''
         _logger.debug(f'BEFORE {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
         beforeWordList = deepcopy(idDict[self.__wordColumn])
         # apply diff
@@ -183,11 +186,12 @@ class Rename:
         formatAbbreviation = []
         heuH1 = ["Abbreviation", "H1", []]
         for word in abbrCandidate:
+            print(f"AbbrCandidate = {word}")
             oldHeu = self.__old["heuristic"][oldExpanded.index(word)]
             newHeu = self.__new["heuristic"][newExpanded.index(word)]
             if oldHeu == newHeu:
                 continue
-            if oldHeu == "H1":
+            elif oldHeu == "H1":
                 heuH1[2].append((word[0], word))
             elif newHeu == "H1":
                 heuH1[2].append((word, word[0]))
@@ -362,7 +366,13 @@ class Rename:
                     print("Abbreviation3")
                     return
         elif operation == "Normalize":
-            pass
+            oldWord = format[1]
+            newWord = format[2]
+            if oldWord in oldDict["normalized"]:
+                id = oldDict["normalized"].index(oldWord)
+                #仮
+                oldDict["normalized"][id] = newWord
+            return
         else:
             _logger.error("undefined format operation")
 # Todo same word handling

@@ -4,6 +4,7 @@ import os
 import argparse
 import time
 from datetime import timedelta
+import heapq
 
 import pandas as pd
 from .util.Rename import Rename, setAbbrDic
@@ -20,6 +21,7 @@ _RELATION_LIST = [
 ]
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 
+RANK = True
 #コマンドライン引数処理
 def setArgument():
     parser = argparse.ArgumentParser()

@@ -40,6 +40,9 @@ public class Dic {
             String[] temp = str.split(":=");
             String key = temp[0];
             String value = temp[1];
+            if (value.split(" ").length >= 3){
+                continue;
+            }
             computerAbbrDicHashMap.put(key.toLowerCase(), value.toLowerCase());
         }
     }
