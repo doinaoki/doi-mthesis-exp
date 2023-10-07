@@ -9,10 +9,9 @@ from .util.Name import ExpandManager
 #oldName = "isSSLClientsAuth"
 #newName = "isRequireClientSslAuth"
 
-def setRenameTest(oldName: dict, newName: str):
+def setRenameTest(oldName: dict, newName: dict):
     _rename = Rename(oldName, True, True)
-    _rename.setNewName(newName["name"])
-    print(_rename.coRename(oldName))
+    print(_rename.debugOperation(oldName, newName))
 
     print(f"oldname = {_rename.getOld()}")
     print(f"newname = {_rename.getNew()}")
@@ -245,6 +244,34 @@ def newNameSet9():
     oldName["files"] = "a/a/a"
     return oldName
 
+def oldNameSet10():
+    oldName = {}
+    oldName["name"] = "fingerUML"
+    oldName["split"] = ["finger", "uml"]
+    oldName["expanded"] = ["finger", "uml"]
+    oldName["normalized"] = ["finger", "uml"]
+    oldName["pattern"] = ["UNKNOWN"]
+    oldName["delimiter"] = ";;".split(';')
+    oldName["case"] = ["LOWER", "UPPER"]
+    oldName["postag"] = ['NN', 'NN']
+    oldName["heuristic"] = ["ST", "ST"]
+    oldName["files"] = "a/a/a"
+    return oldName
+
+def newNameSet10():
+    oldName = {}
+    oldName["name"] = "fingerUml"
+    oldName["split"] = ["finger", "uml"]
+    oldName["expanded"] = ["finger", "uml"]
+    oldName["normalized"] = ["finger", "uml"]
+    oldName["pattern"] = ["LCAMEL"]
+    oldName["delimiter"] = ";;".split(';')
+    oldName["case"] = ["LOWER", "TITLE"]
+    oldName["postag"] = ['NN', 'NN']
+    oldName["heuristic"] = ["ST", "ST"]
+    oldName["files"] = "a/a/a"
+    return oldName
+
 #em = ExpandManager("/Users/doinaoki/Documents/CodeTest/Osumi-OsmAnd/projects/OsmAnd/archives/30681c6f6485fc2314ea4b4e0841942db16ade43/record.json")
 #print(em.expand(newNameSet1()["split"], oldNameSet1()))
 #setRenameTest(oldNameSet1(), newNameSet1()["name"])
@@ -253,6 +280,7 @@ def newNameSet9():
 #setRenameTest(oldNameSet4(), newNameSet4()["name"])
 #setRenameTest(oldNameSet5(), newNameSet5()["name"])
 #setRenameTest(oldNameSet6(), newNameSet6()["name"])
-setRenameTest(oldNameSet7(), newNameSet7())
-setRenameTest(oldNameSet8(), newNameSet8())
-setRenameTest(oldNameSet9(), newNameSet9())
+#setRenameTest(oldNameSet7(), newNameSet7())
+#setRenameTest(oldNameSet8(), newNameSet8())
+#setRenameTest(oldNameSet9(), newNameSet9())
+#setRenameTest(oldNameSet10(), newNameSet10())

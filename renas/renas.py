@@ -21,7 +21,10 @@ _RELATION_LIST = [
 ]
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 
-RANK = True
+RANK = 10
+RANK_DISTANSE_PENALTY = 1
+RANK_WORD_PENALTY = 4
+RANK_FILE_PENALTY = 2
 #コマンドライン引数処理
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -112,10 +115,13 @@ def coRenameNone(tableData, triggerRename):
     result = [r for r in recommends if r is not None]
     return result
 
+'''
 # 他のRenameも推薦できるか見る
 def coRenameRelation(tableData, triggerData, triggerRename):
     triedIds = {triggerData['id']}
     nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
+    idsToRank = {}
+    updateRank(nextIds, idsToRank)
     result = []
     hops = 0
     _logger.debug(f'next ids: {nextIds}')
@@ -138,6 +144,56 @@ def coRenameRelation(tableData, triggerData, triggerRename):
         nextIds = nextIds - triedIds
         _logger.debug(f'next ids: {nextIds}')
     return result
+'''
+
+def coRenameRelation(tableData, triggerData, triggerRename):
+    triedIds = {triggerData['id']}
+    nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
+    idsToRank = {id : [0, triggerData["files"]] for id in nextIds}
+    result = []
+    hops = 0
+    _logger.debug(f'next ids: {nextIds}')
+    while len(nextIds) > 0:
+        triedIds.update(nextIds)
+        hops += 1
+        _logger.debug(f'{hops} hop distance')
+        relatedData = tableData.selectDataByIds(nextIds)
+        _logger.debug(f'candidate Ids: {relatedData["id"].to_list()}')
+        relatedDataLen = len(relatedData)
+        for rIdx in range(relatedDataLen):
+            candidate = relatedData.iloc[rIdx]
+            candidateCopy = deepcopy(candidate.to_dict())
+            candidateRank = idsToRank[candidate["id"]][0]
+            previewFile = idsToRank[candidate["id"]][1]
+            recommended = triggerRename.coRename(candidateCopy)
+            if recommended is not None:
+                _logger.debug(f'{candidate["name"]} should be renamed to {recommended["join"]}')
+                newRank = candidateRank + RANK_DISTANSE_PENALTY
+                if previewFile != candidate["files"]:
+                    newRank += RANK_FILE_PENALTY
+                if newRank > RANK:
+                    continue
+                recommended['hop'] = hops
+                recommended['rank'] = newRank
+                newIds = getRelatedIds(candidate[_RELATION_LIST].dropna())
+                result.append(recommended)
+                idsToRank.update({id: [newRank, candidate["files"]] for id in newIds})
+                nextIds.update(newIds)
+            else:
+                newIds = getRelatedIds(candidate[_RELATION_LIST].dropna())
+                newRank = candidateRank + RANK_DISTANSE_PENALTY + RANK_WORD_PENALTY
+                if previewFile != candidate["files"]:
+                    newRank += RANK_FILE_PENALTY
+                if newRank > RANK:
+                    continue
+                idsToRank.update({id: [newRank, candidate["files"]] for id in newIds})
+                nextIds.update(newIds)
+
+        nextIds = nextIds - triedIds
+        _logger.debug(f'next ids: {nextIds}')
+    return result
+
+
 
 
 def recommend(repo, force):

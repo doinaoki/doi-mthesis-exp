@@ -47,8 +47,15 @@ class Rename:
     def getOp(self):
         return [self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
 
+    def debugOperation(self, oldName, newName):
+        global _abbrManager, _expandManager
+        _abbrManager = AbbreviationManager("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/projects/open-keychain/archives/a8782272b3db20ba6e88acab1d035d4699aa7166/record.json")
+        _expandManager = ExpandManager("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/projects/open-keychain/archives/a8782272b3db20ba6e88acab1d035d4699aa7166/record.json")
+        self.__all = True
+        self.setNewName(newName["name"])
+        return self.coRename(oldName)
+
     def setNewName(self, newName):
-        #self.__all = True
         if self.__new == None:
             self.__new = self.__getNameDetail(newName)
             self.newSetDiff()
@@ -71,10 +78,11 @@ class Rename:
         '''
         _logger.debug(f'BEFORE {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
         beforeWordList = deepcopy(idDict[self.__wordColumn])
+        beforeCaseList = deepcopy(idDict["case"])
         # apply diff
         for diff in self.__diff:
             self.__applyDiff(diff, idDict)
-        if idDict[self.__wordColumn] == beforeWordList:
+        if idDict[self.__wordColumn] == beforeWordList and beforeCaseList == idDict["case"]:
             _logger.debug(f'not a candidate')
             return None
         _logger.debug(f'AFTER {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
@@ -208,9 +216,25 @@ class Rename:
         
     #変更操作changeCase抽出
     def extractChangeCase(self):
+
         if self.__new["pattern"] != 'UNKNOWN' and self.__old["pattern"] != 'UNKNOWN' and self.__old["pattern"] != self.__new["pattern"]:
             return [["changeCase", (self.__old["pattern"], self.__new["pattern"])]]
-        return [] 
+
+        exChangeCase = []
+        if self.__new["pattern"] != ['UNKNOWN'] and self.__old["pattern"] != ['UNKNOWN']:
+            return exChangeCase
+        oldNormalized = self.__old["normalized"]
+        newNormalized = self.__new["normalized"]
+        commonWord = set(oldNormalized) & set(newNormalized)
+        for word in commonWord:
+            oldIndex = oldNormalized.index(word)
+            oldCase = self.__old["case"][oldIndex]
+            newIndex = newNormalized.index(word)
+            newCase = self.__new["case"][newIndex]
+            if oldCase != newCase:
+                exChangeCase.append(["changeCase", (word, newCase)])
+
+        return exChangeCase
 
     #変更操作order抽出
     def extractOrder(self):
@@ -256,7 +280,7 @@ class Rename:
         elif dType == 'order':
             self.__applyOrder(oldDict, diff[1])
         elif dType == 'changeCase':
-            pass
+            self.__applyChangeCase(oldDict, diff[1])
         elif dType == 'delete':
             self.__applyDelete(oldDict, dWords[0])
         elif dType == 'replace':
@@ -276,6 +300,17 @@ class Rename:
             return ''.join(concated)
         elif 'SNAKE' in pattern:
             return '_'.join(words)
+
+    def __applyChangeCase(self, oldDict, changeCase):
+        changeWord = changeCase[0]
+        newCase = changeCase[1]
+
+        for i in range(len(oldDict["normalized"])):
+            word = oldDict["normalized"][i]
+            if word == changeWord:
+                oldDict["case"][i] = newCase
+        return
+
 
     def __applyFormat(self, oldDict, format):
         operation = format[0]
