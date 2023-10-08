@@ -272,6 +272,35 @@ def newNameSet10():
     oldName["files"] = "a/a/a"
     return oldName
 
+def oldNameSet11():
+    oldName = {}
+    oldName["name"] = "fingerUml"
+    oldName["split"] = ["finger", "uml"]
+    oldName["expanded"] = ["finger", "uml"]
+    oldName["normalized"] = ["finger", "uml"]
+    oldName["pattern"] = ["UNKNOWN"]
+    oldName["delimiter"] = ";;".split(';')
+    oldName["case"] = ["LOWER", "TITLE"]
+    oldName["postag"] = ['NN', 'NN']
+    oldName["heuristic"] = ["ST", "ST"]
+    oldName["files"] = "a/a/a"
+    return oldName
+
+def newNameSet11():
+    oldName = {}
+    oldName["name"] = "FingerUml"
+    oldName["split"] = ["finger", "uml"]
+    oldName["expanded"] = ["finger", "uml"]
+    oldName["normalized"] = ["finger", "uml"]
+    oldName["pattern"] = ["TCAMEL"]
+    oldName["delimiter"] = ";;".split(';')
+    oldName["case"] = ["TITLE", "TITLE"]
+    oldName["postag"] = ['NN', 'NN']
+    oldName["heuristic"] = ["ST", "ST"]
+    oldName["files"] = "a/a/a"
+    return oldName
+
+
 #em = ExpandManager("/Users/doinaoki/Documents/CodeTest/Osumi-OsmAnd/projects/OsmAnd/archives/30681c6f6485fc2314ea4b4e0841942db16ade43/record.json")
 #print(em.expand(newNameSet1()["split"], oldNameSet1()))
 #setRenameTest(oldNameSet1(), newNameSet1()["name"])
@@ -283,4 +312,5 @@ def newNameSet10():
 #setRenameTest(oldNameSet7(), newNameSet7())
 #setRenameTest(oldNameSet8(), newNameSet8())
 #setRenameTest(oldNameSet9(), newNameSet9())
-#setRenameTest(oldNameSet10(), newNameSet10())
+setRenameTest(oldNameSet10(), newNameSet10())
+setRenameTest(oldNameSet11(), newNameSet11())
