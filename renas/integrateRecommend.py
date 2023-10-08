@@ -22,7 +22,7 @@ _logger = getLogger(__name__)
 
 researchFileNames = {"recommend_none.json": "None",
                     "recommend_relation_normalize.json": "Normalize",
-                    "recommend_relation.json": "None",
+                    "recommend_relation.json": "Relation",
                     "recommend_all_normalize.json": "all"}
 detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewname', 'op',
                 'commitPool', 'researchCommit', 'file', 'line', 'oldname' ,'truename', 'recommendname']]
@@ -34,6 +34,8 @@ numberToCommit = {}
 dateToCommit = {}
 commitToNumber = {}
 commitToDate = {}
+
+missOperation = {op: {"insert": [0, 0, 0], "delete": [0, 0, 0], "replace": [0, 0, 0], "order": [0, 0, 0], "format": [0, 0, 0], "changeCase": [0, 0, 0], "changePattern": [0, 0, 0]} for op in researchFileNames.values()}
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -118,8 +120,7 @@ def getCommitsInfo(commit):
 def getKey(dic):
     return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
 
-#Todo Dataframeで実装し直すべき
-def recommendCommit(commit, tableData, operations, recommendName, renameInfo, none):
+def recommendCommit(commit, tableData, operations, recommendName, renameInfo, opIds):
     #調査体操となる複数コミットを取得
     researchCommits = getCommitsInfo(commit)
     opGroup = {}
@@ -188,7 +189,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, no
         else:
             #rename情報とrecommend情報を基に評価
             #print(len(renames), len(triggerRec))
-            trueRecommendIndex = evaluate(renames, triggerRec, tableData, none)
+            trueRecommendIndex = evaluate(renames, triggerRec, tableData, opIds)
             trueRecommendCount = len(trueRecommendIndex)
             exactMatch = getExactMatch(renames, triggerRec, trueRecommendIndex)
             exactMatchCount = len(exactMatch)
@@ -203,7 +204,8 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, no
         allRenames += len(renames)
         allRecommend += len(triggerRec)
         allTrueRec += len(trueRecommendIndex)
-        setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none)
+        setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
+        setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
         print(f"operation chunk = {triggerOp}")
         print(f"precision = {precision},  recall = {recall},\
                exact = {exacts}, fscore = {fscore} ")
@@ -215,6 +217,15 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, no
                         "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend if allRecommend != 0 else 0,
                          "recall", allTrueRec/allRenames if allRenames != 0 else 0])
     return allRenames, allRecommend, allTrueRec
+
+def setMissOperation(opId, setOp, reNum, trigNum, trueNum):
+
+    for op in setOp:
+        operation = op[0]
+        a, b, c = missOperation[opId][operation]
+        missOperation[opId][operation] = [a + reNum, b + trigNum, c + trueNum]
+
+
 
 def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none):
     commitPool = [commit]
@@ -234,7 +245,7 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none):
                 trueRecommendIndex.append([i, k])
                 flag = True
                 break
-        if not none:
+        if op != "None":
             if flag:
                 continue
             ri = canRecommendation(r, triggerRec, tableData)
@@ -447,7 +458,7 @@ def canRecommendation(rename, recommendation, tableData):
     else:
         _logger.error("unknown typeOfIdentifier")
 
-def evaluate(renames, recommendation, tableData, none):
+def evaluate(renames, recommendation, tableData, op):
     #print(len(renames), len(recommendation))
     if len(recommendation) == 0:
         return []
@@ -464,7 +475,7 @@ def evaluate(renames, recommendation, tableData, none):
                 trueRecommendIndex.append([i, k])
                 flag = True
                 break
-        if not none:
+        if op != "None":
             if flag:
                 continue
             ri = canRecommendation(r, recommendation, tableData)
@@ -489,6 +500,15 @@ def evaluate(renames, recommendation, tableData, none):
     #print(f"recall = {len(trueRecommend)/len(renames)}, precision = {len(trueRecommend)/len(recommendation)}")
     return trueRecommendIndex
 
+def writeMissOperation(missCSV):
+    with open(missCSV, 'w') as wCSV:
+        w = csv.writer(wCSV)
+        for op, missDic in missOperation.items():
+            w.writerow([op])
+            for operation, nums in missDic.items():
+                w.writerow([operation]+nums)
+
+
 
 if __name__ ==  "__main__":
     args = setArgument()
@@ -496,6 +516,7 @@ if __name__ ==  "__main__":
     setGitlog(args.source)
     detailCSV = os.path.join(args.source,'integrateDetail.csv')  ##
     resultCSV = os.path.join(args.source,'integrateResult.csv') 
+    missCSV = os.path.join(args.source,'missOperation.csv') 
 
     #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
     for fileName, op in researchFileNames.items():
@@ -514,9 +535,9 @@ if __name__ ==  "__main__":
             tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
             tableData = ExTable(tablePath)
             if fileName == "recommend_none.json":
-                countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, True)
+                countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op)
             else:
-                countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, False)
+                countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op)
             allRename += countRename
             allRec += countRec
             allTrue += countTrue
@@ -526,7 +547,7 @@ if __name__ ==  "__main__":
                         "recall", allTrue/allRename if allRename != 0 else 0])
         result_info.append([""])
     
-
+    writeMissOperation(missCSV)
 
 
     with open(detailCSV, 'w') as dCSV:
@@ -536,4 +557,5 @@ if __name__ ==  "__main__":
     with open(resultCSV, 'w') as dCSV:
         w = csv.writer(dCSV)
         w.writerows(result_info)
+
 
