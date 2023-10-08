@@ -13,8 +13,8 @@ _caseManager = CaseManager()
 _expandManager = None
 _logger = getLogger('util.Rename')
 _logger.setLevel(DEBUG)
-#_abbrManager = AbbreviationManager("/Users/doinaoki/Documents/CodeTest/Osumi-saigen2/projects/ratpack/archives/beb8cabeedcdb42db742e808228408b1e2cc6513/record.json")
-
+#_abbrManager = AbbreviationManager("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/projects/open-keychain/archives/a8782272b3db20ba6e88acab1d035d4699aa7166/record.json")
+#_expandManager = ExpandManager("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/projects/open-keychain/archives/a8782272b3db20ba6e88acab1d035d4699aa7166/record.json")
 def setAbbrDic(abbrDicPath):
     global _abbrManager, _expandManager
     _abbrManager = AbbreviationManager(abbrDicPath)
@@ -47,6 +47,14 @@ class Rename:
     def getOp(self):
         return [self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
 
+    def debugOperation(self, oldName, newName):
+        global _abbrManager, _expandManager
+        _abbrManager = AbbreviationManager("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/projects/open-keychain/archives/a8782272b3db20ba6e88acab1d035d4699aa7166/record.json")
+        _expandManager = ExpandManager("/Users/doinaoki/Documents/GitHub/doi-mthesis-exp/projects/open-keychain/archives/a8782272b3db20ba6e88acab1d035d4699aa7166/record.json")
+        self.__all = True
+        self.setNewName(newName["name"])
+        return self.coRename(oldName)
+
     def setNewName(self, newName):
         if self.__new == None:
             self.__new = self.__getNameDetail(newName)
@@ -63,15 +71,18 @@ class Rename:
     def coRename(self, idDict):
         if not self.__normalize:
             self.__overWriteDetail(idDict)
+        '''
         if idDict == self.__old:
             _logger.debug('candidate is the same as trigger')
             return None
+        '''
         _logger.debug(f'BEFORE {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
         beforeWordList = deepcopy(idDict[self.__wordColumn])
+        beforeCaseList = deepcopy(idDict["pattern"])
         # apply diff
         for diff in self.__diff:
             self.__applyDiff(diff, idDict)
-        if idDict[self.__wordColumn] == beforeWordList:
+        if idDict[self.__wordColumn] == beforeWordList and beforeCaseList == idDict["pattern"]:
             _logger.debug(f'not a candidate')
             return None
         _logger.debug(f'AFTER {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
@@ -183,11 +194,12 @@ class Rename:
         formatAbbreviation = []
         heuH1 = ["Abbreviation", "H1", []]
         for word in abbrCandidate:
+            print(f"AbbrCandidate = {word}")
             oldHeu = self.__old["heuristic"][oldExpanded.index(word)]
             newHeu = self.__new["heuristic"][newExpanded.index(word)]
             if oldHeu == newHeu:
                 continue
-            if oldHeu == "H1":
+            elif oldHeu == "H1":
                 heuH1[2].append((word[0], word))
             elif newHeu == "H1":
                 heuH1[2].append((word, word[0]))
@@ -204,9 +216,23 @@ class Rename:
         
     #変更操作changeCase抽出
     def extractChangeCase(self):
-        if self.__new["pattern"] != 'UNKNOWN' and self.__old["pattern"] != 'UNKNOWN' and self.__old["pattern"] != self.__new["pattern"]:
-            return [["changeCase", (self.__old["pattern"], self.__new["pattern"])]]
-        return [] 
+        exChangeCase = []
+        if self.__new["pattern"] == [] or self.__old["pattern"] == []:
+            oldNormalized = self.__old["normalized"]
+            newNormalized = self.__new["normalized"]
+            commonWord = set(oldNormalized) & set(newNormalized)
+            for word in commonWord:
+                oldIndex = oldNormalized.index(word)
+                oldCase = self.__old["case"][oldIndex]
+                newIndex = newNormalized.index(word)
+                newCase = self.__new["case"][newIndex]
+                if oldCase != newCase:
+                    exChangeCase.append(["changeCase", (word, newCase)])
+            return exChangeCase
+        elif self.__old["pattern"] != self.__new["pattern"]:   
+            exChangeCase.append(["changePattern", (self.__old["normalized"][0], self.__new["pattern"])])
+            return exChangeCase
+        return exChangeCase
 
     #変更操作order抽出
     def extractOrder(self):
@@ -252,7 +278,9 @@ class Rename:
         elif dType == 'order':
             self.__applyOrder(oldDict, diff[1])
         elif dType == 'changeCase':
-            pass
+            self.__applyChangeCase(oldDict, diff[1])
+        elif dType == 'changePattern':
+            self.__applyChangePattern(oldDict, diff[1])
         elif dType == 'delete':
             self.__applyDelete(oldDict, dWords[0])
         elif dType == 'replace':
@@ -272,6 +300,28 @@ class Rename:
             return ''.join(concated)
         elif 'SNAKE' in pattern:
             return '_'.join(words)
+
+    def __applyChangeCase(self, oldDict, changeCase):
+        changeWord = changeCase[0]
+        newCase = changeCase[1]
+
+        for i in range(len(oldDict["normalized"])):
+            word = oldDict["normalized"][i]
+            if word == changeWord:
+                oldDict["case"][i] = newCase
+                oldDict["pattern"].append("change")
+        return
+    
+
+    def __applyChangePattern(self, oldDict, changePattern):
+        changeWord = changePattern[0]
+        newPattern = changePattern[1]
+
+        if changeWord in oldDict["normalized"] and oldDict["pattern"] != newPattern:
+            oldDict["pattern"] = newPattern
+
+        return
+
 
     def __applyFormat(self, oldDict, format):
         operation = format[0]
@@ -362,7 +412,13 @@ class Rename:
                     print("Abbreviation3")
                     return
         elif operation == "Normalize":
-            pass
+            oldWord = format[1]
+            newWord = format[2]
+            if oldWord in oldDict["normalized"]:
+                id = oldDict["normalized"].index(oldWord)
+                #仮
+                oldDict["normalized"][id] = newWord
+            return
         else:
             _logger.error("undefined format operation")
 # Todo same word handling
