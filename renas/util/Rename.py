@@ -6,6 +6,7 @@ from .common import getPaddingList, printDict, splitIdentifier
 from logging import getLogger, DEBUG
 from itertools import zip_longest
 import pandas as pd
+import math
 
 _lemmatizer = LemmaManager()
 _abbrManager = None
@@ -71,11 +72,9 @@ class Rename:
     def coRename(self, idDict):
         if not self.__normalize:
             self.__overWriteDetail(idDict)
-        '''
         if idDict == self.__old:
             _logger.debug('candidate is the same as trigger')
             return None
-        '''
         _logger.debug(f'BEFORE {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
         beforeWordList = deepcopy(idDict[self.__wordColumn])
         beforeCaseList = deepcopy(idDict["pattern"])
@@ -121,7 +120,7 @@ class Rename:
         words = result['split']
 
         if self.__all:
-            result["expanded"], result["heuristic"] = _expandManager.expand(words, self.__old)
+            result["expanded"], result["heuristic"], result["case"] = _expandManager.expand(result, self.__old)
             postags = _lemmatizer.getPosTags(result["expanded"])
             result['postag'] = postags
             result['normalized'] = _lemmatizer.normalize(result["expanded"], postags)
@@ -304,7 +303,6 @@ class Rename:
     def __applyChangeCase(self, oldDict, changeCase):
         changeWord = changeCase[0]
         newCase = changeCase[1]
-
         for i in range(len(oldDict["normalized"])):
             word = oldDict["normalized"][i]
             if word == changeWord:
@@ -367,8 +365,9 @@ class Rename:
                         id = oldDict["normalized"].index(i[0])
                         oldDict["normalized"][id] = i[1]
                         oldDict["heuristic"][id] = "H1"
+                        oldDict["postag"][id] = "NN"
                         oldDict["case"][id] = "LOWER"
-                        oldDict["pattern"] = "UNKNOWN"
+                        oldDict["pattern"] = []
 
             elif heu == "H2":
                 oldWord = format[2]
@@ -389,6 +388,7 @@ class Rename:
                         id = oldDict["normalized"].index(oldWord)
                         oldDict["normalized"][id] = newWord
                         oldDict["heuristic"][id] = "ST"
+                        oldDict["postag"][id] = "NN"
                     print("Abbreviation2")
                     return
             elif heu == "H3":
@@ -409,6 +409,7 @@ class Rename:
                         id = oldDict["normalized"].index(oldWord)
                         oldDict["normalized"][id] = newWord
                         oldDict["heuristic"][id] = "ST"
+                        oldDict["postag"][id] = "NN"
                     print("Abbreviation3")
                     return
         elif operation == "Normalize":
