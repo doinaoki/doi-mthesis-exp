@@ -17,10 +17,11 @@ from datetime import datetime, date, timedelta
 import pandas as pd
 from .util.Name import KgExpanderSplitter
 from .util.Rename import Rename
+import statistics
 
 _logger = getLogger(__name__)
 
-researchFileNames = {"recommend_none.json": "None",
+researchFileNames = {
                     "recommend_relation_normalize.json": "Normalize",
                     "recommend_relation.json": "Relation",
                     "recommend_all_normalize.json": "all"}
@@ -28,12 +29,18 @@ detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewna
                 'commitPool', 'researchCommit', 'file', 'line', 'oldname' ,'truename', 'recommendname']]
 
 result_info = []
+allPrecision = {op: [] for op in researchFileNames.values()}
+allRecall = {op: [] for op in researchFileNames.values()}
+allFscore = {op: [] for op in researchFileNames.values()}
 
 gitRe = re.compile(r'(?:^commit)\s+(.+)\nAuthor:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
 numberToCommit = {}
 dateToCommit = {}
 commitToNumber = {}
 commitToDate = {}
+
+RANK = 30
+rankTrueRecommend = [[0, 0] for _ in range(RANK)]
 
 missOperation = {op: {"insert": [0, 0, 0], "delete": [0, 0, 0], "replace": [0, 0, 0], "order": [0, 0, 0], "format": [0, 0, 0], "changeCase": [0, 0, 0], "changePattern": [0, 0, 0]} for op in researchFileNames.values()}
 
@@ -204,6 +211,10 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         allRenames += len(renames)
         allRecommend += len(triggerRec)
         allTrueRec += len(trueRecommendIndex)
+        allPrecision[opIds].append(precision)
+        allRecall[opIds].append(recall)
+        allFscore[opIds].append(fscore)
+        addRankRecommend(triggerRec, opIds)
         setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
         setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
         print(f"operation chunk = {triggerOp}")
@@ -225,6 +236,10 @@ def setMissOperation(opId, setOp, reNum, trigNum, trueNum):
         a, b, c = missOperation[opId][operation]
         missOperation[opId][operation] = [a + reNum, b + trigNum, c + trueNum]
 
+def addRankRecommend(recommendations, op):
+    for rec in recommendations:
+        if op == "all":
+            rankTrueRecommend[rec["rank"]-1][1] += 1
 
 
 def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none):
@@ -473,6 +488,8 @@ def evaluate(renames, recommendation, tableData, op):
             recKey = str([rec["line"], rec["typeOfIdentifier"], rec["name"], rec["files"]])
             if key == recKey:
                 trueRecommendIndex.append([i, k])
+                if op == "all":
+                    rankTrueRecommend[rec["rank"]-1][0] += 1
                 flag = True
                 break
         if op != "None":
@@ -482,6 +499,8 @@ def evaluate(renames, recommendation, tableData, op):
             if ri == None:
                 continue
             trueRecommendIndex.append([i, ri])
+            if op == "all":
+                rankTrueRecommend[recommendation[ri]["rank"]-1][0] += 1
         #print(i, ri)
                 
     '''
@@ -517,6 +536,7 @@ if __name__ ==  "__main__":
     detailCSV = os.path.join(args.source,'integrateDetail.csv')  ##
     resultCSV = os.path.join(args.source,'integrateResult.csv') 
     missCSV = os.path.join(args.source,'missOperation.csv') 
+    allCSV = os.path.join(args.source,'all.csv') 
 
     #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
     for fileName, op in researchFileNames.items():
@@ -558,4 +578,17 @@ if __name__ ==  "__main__":
         w = csv.writer(dCSV)
         w.writerows(result_info)
 
+    with open(allCSV, 'w') as dCSV:
+        w = csv.writer(dCSV)
+        for i, k in allPrecision.items():
+            w.writerow([i])
+            w.writerow([statistics.mean(k)])
+        for i, k in allRecall.items():
+            w.writerow([i])
+            w.writerow([statistics.mean(k)])
+        for i, k in allFscore.items():
+            w.writerow([i])
+            w.writerow([statistics.mean(k)])
+        w.writerow(rankTrueRecommend)
+        
 

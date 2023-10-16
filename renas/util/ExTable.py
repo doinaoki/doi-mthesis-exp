@@ -61,3 +61,10 @@ class ExTable:
 
     def selectAllData(self):
         return self.__table
+
+    def selectDataById(self, id):
+        data = self.__table[self.__table['id'] == id]
+        if len(data) != 1:
+            _logger.warning(f'Cannot selectData by id {id}\n')
+            return None 
+        return data.iloc[0]

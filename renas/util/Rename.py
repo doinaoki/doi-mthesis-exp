@@ -157,9 +157,9 @@ class Rename:
             oldSplit = self.__old["normalized"]
             self.__diff = []
             if self.__all == True:
-                self.__diff += self.extractFormat()
-                self.__diff += self.extractChangeCase()
+                #self.__diff += self.extractChangeCase()
                 self.__diff += self.extractOrder()
+                self.__diff += self.extractFormat()
                 oldSplit = self.__old["ordered"]
             newSplit = self.__new[self.__wordColumn]
             diff_list = difflib.SequenceMatcher(None, oldSplit, newSplit).get_opcodes()
@@ -305,18 +305,20 @@ class Rename:
         newCase = changeCase[1]
         for i in range(len(oldDict["normalized"])):
             word = oldDict["normalized"][i]
-            if word == changeWord:
+            if word == changeWord and oldDict["case"][i] != newCase:
                 oldDict["case"][i] = newCase
                 oldDict["pattern"].append("change")
         return
     
 
     def __applyChangePattern(self, oldDict, changePattern):
+        '''
         changeWord = changePattern[0]
         newPattern = changePattern[1]
 
         if changeWord in oldDict["normalized"] and oldDict["pattern"] != newPattern:
             oldDict["pattern"] = newPattern
+        '''
 
         return
 
@@ -366,7 +368,6 @@ class Rename:
                         oldDict["normalized"][id] = i[1]
                         oldDict["heuristic"][id] = "H1"
                         oldDict["postag"][id] = "NN"
-                        oldDict["case"][id] = "LOWER"
                         oldDict["pattern"] = []
 
             elif heu == "H2":
@@ -417,7 +418,12 @@ class Rename:
             newWord = format[2]
             if oldWord in oldDict["normalized"]:
                 id = oldDict["normalized"].index(oldWord)
+                oldDict["postag"][id] = "NN"
                 #仮
+                oldDict["normalized"][id] = newWord
+            elif oldWord in oldDict["expanded"]:
+                id = oldDict["expanded"].index(oldWord)
+                oldDict["postag"][id] = "NN"
                 oldDict["normalized"][id] = newWord
             return
         else:
