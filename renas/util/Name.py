@@ -294,19 +294,24 @@ class ExpandManager:
         pass
 
 
-    def expand(self, words, beforeWordDic):
+    def expand(self, result, beforeWordDic):
+        words = result['split']
+        wordsCase = result['case']
         identifier = []
         heuList = []
+        newCase = []
         for word in words:
             identifiers, hue = self.expandWord(word, beforeWordDic)                
             if word in self.__skipDict:
                 if hue != ["H1"]*len(word):
                     identifiers = [word]
                     hue = ["ST"]
+            wc = wordsCase[words.index(word)]
             for i in range(len(identifiers)):
                 identifier.append(identifiers[i])
                 heuList.append(hue[i])
-        return identifier, heuList
+                newCase.append(wc)
+        return identifier, heuList, newCase
 
     '''
         identifierList = [self.expandWord(word, beforeWordDic) for word in words]

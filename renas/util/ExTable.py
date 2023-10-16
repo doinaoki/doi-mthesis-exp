@@ -1,6 +1,7 @@
 from ast import literal_eval
 import pandas as pd
 from logging import getLogger, DEBUG, StreamHandler
+import math
 
 _logger = getLogger('util.Name')
 _logger.setLevel(DEBUG)
@@ -22,7 +23,7 @@ class ExTable:
         tableData = tableData[tableData['line'] != -1]
         tableData['split'] = tableData['split'].map(lambda x: str(x).split(';'))
         tableData['delimiter'] = tableData['delimiter'].map(lambda x: str(x).split(';'))
-        tableData['pattern'] = tableData['pattern'].map(lambda x: x if isinstance(x, list) else [x])
+        tableData['pattern'] = tableData['pattern'].map(lambda x: x if isinstance(x, list) else [x] if not pd.isna(x) else [])
         tableData['case'] = tableData['case'].map(lambda x: str(x).split(';'))
         _logger.debug(f'successfully read')
         return tableData
@@ -60,3 +61,10 @@ class ExTable:
 
     def selectAllData(self):
         return self.__table
+
+    def selectDataById(self, id):
+        data = self.__table[self.__table['id'] == id]
+        if len(data) != 1:
+            _logger.warning(f'Cannot selectData by id {id}\n')
+            return None 
+        return data.iloc[0]

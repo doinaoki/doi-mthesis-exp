@@ -21,10 +21,11 @@ _RELATION_LIST = [
 ]
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 
-RANK = 10
+RANK = 11
 RANK_DISTANSE_PENALTY = 1
-RANK_WORD_PENALTY = 4
-RANK_FILE_PENALTY = 2
+RANK_WORD_PENALTY = 5
+RANK_FILE_PENALTY = 1
+UPPER = 50
 #コマンドライン引数処理
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -120,8 +121,6 @@ def coRenameNone(tableData, triggerRename):
 def coRenameRelation(tableData, triggerData, triggerRename):
     triedIds = {triggerData['id']}
     nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
-    idsToRank = {}
-    updateRank(nextIds, idsToRank)
     result = []
     hops = 0
     _logger.debug(f'next ids: {nextIds}')
@@ -146,6 +145,7 @@ def coRenameRelation(tableData, triggerData, triggerRename):
     return result
 '''
 
+'''
 def coRenameRelation(tableData, triggerData, triggerRename):
     triedIds = {triggerData['id']}
     nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
@@ -192,8 +192,52 @@ def coRenameRelation(tableData, triggerData, triggerRename):
         nextIds = nextIds - triedIds
         _logger.debug(f'next ids: {nextIds}')
     return result
+'''
 
+def coRenameRelation(tableData, triggerData, triggerRename):
+    triedIds = {triggerData.to_dict()['id']}
+    triggerScore = 0
+    nextIds = []
+    heapq.heappush(nextIds, [triggerScore, triggerData["id"]])  
+    result = []
+    _logger.debug(f'next ids: {nextIds}')
+    trueRecommend = 0
+    while len(nextIds) > 0 and UPPER > trueRecommend:
+        #調べるidを取得する
+        score ,searchId = heapq.heappop(nextIds)
+        searchData = tableData.selectDataById(searchId)
+        #print(score, searchId)
+        triedIds.add(searchId)
 
+        #推薦実施
+        searchDataCopy = deepcopy(searchData.to_dict())
+        #print(searchDataCopy["name"])
+        nextScore = score + RANK_DISTANSE_PENALTY
+        if searchDataCopy['id'] != triggerData['id']:
+            recommended = triggerRename.coRename(searchDataCopy)
+            if recommended is not None:
+                recommended['rank'] = score
+                result.append(recommended)
+                trueRecommend += 1
+            else:
+                nextScore += RANK_WORD_PENALTY
+
+        #次に調べるべきidを格納
+        candidateIds = getRelatedIds(searchData[_RELATION_LIST].dropna())
+        candidateData = tableData.selectDataByIds(candidateIds)
+        candidateLen = len(candidateData)
+        for ci in range(candidateLen):
+            candidate = candidateData.iloc[ci].to_dict()
+            if candidate["id"] in triedIds:
+                continue
+            if candidate["files"] != searchDataCopy["files"]:
+                if nextScore + RANK_FILE_PENALTY < RANK:
+                    heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY, candidate["id"]])
+            else:
+                if nextScore < RANK:
+                    heapq.heappush(nextIds, [nextScore, candidate["id"]])
+        _logger.debug(f'next ids: {nextIds}')
+    return result
 
 
 def recommend(repo, force):
@@ -263,7 +307,7 @@ def recommend(repo, force):
             commitStartTime = time.time()
             # all
             _logger.info(f'start recommend: {commit} | {gIdx}')
-            resultNone[commit][gIdx] = doCoRename(commit, tableData, trigger)
+            #resultNone[commit][gIdx] = doCoRename(commit, tableData, trigger)
             # relation
             resultRelation[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True)
             # relation normalize
@@ -275,11 +319,11 @@ def recommend(repo, force):
             _logger.info(f'commit elapsed time: {timedelta(seconds=(commitEndTime - commitStartTime))}')
     # output
     _logger.info('export result')
-    with open(outputNone, 'w') as ON, \
-            open(outputRelation, 'w') as OR, \
+    #with open(outputNone, 'w') as ON, \
+    with open(outputRelation, 'w') as OR, \
             open(outputRelationNormalize, 'w') as ORN, \
             open(outputAllNormalize, 'w') as OAN:
-        simplejson.dump(resultNone, ON, indent=4, ignore_nan=True)
+        #simplejson.dump(resultNone, ON, indent=4, ignore_nan=True)
         simplejson.dump(resultRelation, OR, indent=4, ignore_nan=True)
         simplejson.dump(resultRelationNormalize, ORN, indent=4, ignore_nan=True)
         simplejson.dump(resultAllNormalize, OAN, indent=4, ignore_nan=True)
