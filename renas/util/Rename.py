@@ -516,6 +516,7 @@ class Rename:
             self.__replaceSlice(oldDict['heuristic'], idx, idx+deletedWordLen, toHeuristics)
 
 #todo 変更
+    '''
     def __applyInsert(self, oldDict, insertedWords):
         _logger.debug(f'insert {insertedWords}')
         insertedWordLen = len(insertedWords)
@@ -552,6 +553,54 @@ class Rename:
             # heuristic
             newHeuristic = [oldDict['heuristic'][contextIdx]] * insertedWordLen
             self.__replaceSlice(oldDict['heuristic'], replIdx, replIdx, newHeuristic)
+    '''
+# new Insert
+    def __applyInsert(self, oldDict, insertedWords):
+        _logger.debug(f'insert {insertedWords}')
+        insertedWordLen = len(insertedWords)
+        newNorm = self.__new[self.__wordColumn]
+        oldNorm = oldDict[self.__wordColumn]
+        edge = False
+        idx = self.__findIndex(insertedWords, newNorm)
+        before = idx - 1
+        beforeWord = [newNorm[before] if before >= 0 else '']
+        after = idx + insertedWordLen
+        afterWord = [newNorm[after] if after < len(newNorm) else '']
+        if beforeWord == [''] or afterWord == ['']:
+            edge = True
+        beforeIdx = self.__findIndex(beforeWord, oldNorm)
+        afterIdx = self.__findIndex(afterWord, oldNorm)
+
+        #真ん中
+        if afterIdx != -1 and beforeIdx != -1 and beforeIdx + 1 == afterIdx:
+            contextIdx = afterIdx
+            replIdx = afterIdx
+        #左端
+        elif edge and afterIdx != -1:
+            contextIdx = afterIdx
+            replIdx = afterIdx
+        #右端
+        elif edge and beforeIdx != -1:
+            contextIdx = beforeIdx
+            replIdx = beforeIdx + 1
+        else:
+            return
+        # word
+        self.__replaceSlice(oldDict[self.__wordColumn], replIdx, replIdx, insertedWords)
+        # case
+        newCase = [oldDict['case'][contextIdx]] * insertedWordLen
+        self.__replaceSlice(oldDict['case'], replIdx, replIdx, newCase)
+        # delim
+        newDelim = [''] * insertedWordLen
+        self.__replaceSlice(oldDict['delimiter'], replIdx, replIdx, newDelim)
+        if self.__normalize:
+            # postag
+            newPostag = [oldDict['postag'][contextIdx]] * insertedWordLen
+            self.__replaceSlice(oldDict['postag'], replIdx, replIdx, newPostag)
+            # heuristic
+            newHeuristic = [oldDict['heuristic'][contextIdx]] * insertedWordLen
+            self.__replaceSlice(oldDict['heuristic'], replIdx, replIdx, newHeuristic)
+
 
     def __findIndex(self, words, target):
         iterRange = len(target) - len(words) + 1

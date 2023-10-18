@@ -21,11 +21,11 @@ _RELATION_LIST = [
 ]
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 
-RANK = 11
+RANK = 14
 RANK_DISTANSE_PENALTY = 1
 RANK_WORD_PENALTY = 5
 RANK_FILE_PENALTY = 1
-UPPER = 50
+UPPER = 20
 #コマンドライン引数処理
 def setArgument():
     parser = argparse.ArgumentParser()

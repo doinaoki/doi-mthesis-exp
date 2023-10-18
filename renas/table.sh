@@ -13,7 +13,7 @@ archive=${1%/}
 
 shift $(expr $OPTIND - 1) # remove option args
 JARPATH="AbbrExpansion/out"
-PARSECODE="ParseCode.jar"
+PARSECODE="Parse2-all.jar"
 SEMANTICEXPAND="SemanticExpand.jar"
 IDTABLE="idTable.csv"
 EXTABLE="exTable.csv"
