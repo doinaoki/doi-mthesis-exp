@@ -21,7 +21,7 @@ _RELATION_LIST = [
 ]
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 
-RANK = 14
+RANK = 11
 RANK_DISTANSE_PENALTY = 1
 RANK_WORD_PENALTY = 5
 RANK_FILE_PENALTY = 1
@@ -195,18 +195,23 @@ def coRenameRelation(tableData, triggerData, triggerRename):
 '''
 
 def coRenameRelation(tableData, triggerData, triggerRename):
-    triedIds = {triggerData.to_dict()['id']}
+    triedIds = set()
     triggerScore = 0
     nextIds = []
     heapq.heappush(nextIds, [triggerScore, triggerData["id"]])  
     result = []
     _logger.debug(f'next ids: {nextIds}')
     trueRecommend = 0
-    while len(nextIds) > 0 and UPPER > trueRecommend:
+    trueRecommendScore = RANK
+    while len(nextIds) > 0:
         #調べるidを取得する
         score ,searchId = heapq.heappop(nextIds)
+        if trueRecommendScore < score:
+            continue
         searchData = tableData.selectDataById(searchId)
         #print(score, searchId)
+        if searchId in triedIds:
+            continue
         triedIds.add(searchId)
 
         #推薦実施
@@ -219,6 +224,8 @@ def coRenameRelation(tableData, triggerData, triggerRename):
                 recommended['rank'] = score
                 result.append(recommended)
                 trueRecommend += 1
+                if trueRecommend == UPPER:
+                    trueRecommendScore = score
             else:
                 nextScore += RANK_WORD_PENALTY
 
@@ -237,6 +244,7 @@ def coRenameRelation(tableData, triggerData, triggerRename):
                 if nextScore < RANK:
                     heapq.heappush(nextIds, [nextScore, candidate["id"]])
         _logger.debug(f'next ids: {nextIds}')
+    print(trueRecommendScore)
     return result
 
 

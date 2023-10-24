@@ -366,7 +366,7 @@ class Rename:
                     if i[0] in oldDict["normalized"]:
                         id = oldDict["normalized"].index(i[0])
                         oldDict["normalized"][id] = i[1]
-                        oldDict["heuristic"][id] = "H1"
+                        oldDict["heuristic"][id] = "ST"
                         oldDict["postag"][id] = "NN"
                         oldDict["pattern"] = []
 
@@ -416,6 +416,7 @@ class Rename:
         elif operation == "Normalize":
             oldWord = format[1]
             newWord = format[2]
+            #ToDo: newwordが既に含まれていた場合returnを返す
             if oldWord in oldDict["normalized"]:
                 id = oldDict["normalized"].index(oldWord)
                 oldDict["postag"][id] = "NN"

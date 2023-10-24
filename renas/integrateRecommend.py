@@ -39,7 +39,7 @@ dateToCommit = {}
 commitToNumber = {}
 commitToDate = {}
 
-RANK = 30
+RANK = 14
 rankTrueRecommend = [[0, 0] for _ in range(RANK)]
 
 missOperation = {op: {"insert": [0, 0, 0], "delete": [0, 0, 0], "replace": [0, 0, 0], "order": [0, 0, 0], "format": [0, 0, 0], "changeCase": [0, 0, 0], "changePattern": [0, 0, 0]} for op in researchFileNames.values()}
@@ -242,7 +242,7 @@ def addRankRecommend(recommendations, op):
             rankTrueRecommend[rec["rank"]-1][1] += 1
 
 
-def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none):
+def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, op):
     commitPool = [commit]
     for r in renames:
         if r["commit"] not in commitPool:
@@ -270,9 +270,9 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none):
         #print(i, ri)
 
     for t in trueRecommendIndex:
-        detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
+        detail = [commit, trigger["files"], trigger["line"], trigger["typeOfIdentifier"], trigger["oldname"], trigger["newname"],
                     str(triggerOp), commitPool, renames[t[0]]["commit"], renames[t[0]]["files"], str(renames[t[0]]["line"]), 
-                    renames[t[0]]["oldname"], renames[t[0]]["newname"], triggerRec[t[1]]["join"], "NaN"]
+                    renames[t[0]]["typeOfIdentifier"], renames[t[0]]["oldname"], renames[t[0]]["newname"], triggerRec[t[1]]["join"], triggerRec[t[1]]["rank"]]
         detail_info.append(detail)
 
     for t in range(len(renames)):
@@ -281,9 +281,9 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none):
             if t == v[0]:
                 flag = False
         if flag:
-            detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
+            detail = [commit, trigger["files"], trigger["line"], trigger["typeOfIdentifier"], trigger["oldname"], trigger["newname"],
                 str(triggerOp), commitPool, renames[t]["commit"], renames[t]["files"], str(renames[t]["line"]), 
-                renames[t]["oldname"], renames[t]["newname"], "NaN", "NaN"]
+                renames[t]["typeOfIdentifier"], renames[t]["oldname"], renames[t]["newname"], "NaN", "NaN"]
             detail_info.append(detail)
 
     for t in range(len(triggerRec)):
@@ -292,9 +292,9 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, none):
             if t == v[1]:
                 flag = False
         if flag:
-            detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
+            detail = [commit, trigger["files"], trigger["line"], trigger["typeOfIdentifier"], trigger["oldname"], trigger["newname"],
                 str(triggerOp), commitPool, commit, triggerRec[t]["files"], str(triggerRec[t]["line"]), 
-                triggerRec[t]["name"], "NaN", triggerRec[t]["join"] , "NaN"]
+                triggerRec[t]["typeOfIdentifier"],triggerRec[t]["name"], "NaN", triggerRec[t]["join"] , triggerRec[t]["rank"]]
             detail_info.append(detail)
 
 '''
@@ -581,14 +581,26 @@ if __name__ ==  "__main__":
     with open(allCSV, 'w') as dCSV:
         w = csv.writer(dCSV)
         for i, k in allPrecision.items():
-            w.writerow([i])
-            w.writerow([statistics.mean(k)])
+            if k != []:
+                w.writerow([i])
+                w.writerow([statistics.mean(k)])
+            else:
+                w.writerow([i])
+                w.writerow([0])
         for i, k in allRecall.items():
-            w.writerow([i])
-            w.writerow([statistics.mean(k)])
+            if k != []:
+                w.writerow([i])
+                w.writerow([statistics.mean(k)])
+            else:
+                w.writerow([i])
+                w.writerow([0])
         for i, k in allFscore.items():
-            w.writerow([i])
-            w.writerow([statistics.mean(k)])
+            if k != []:
+                w.writerow([i])
+                w.writerow([statistics.mean(k)])
+            else:
+                w.writerow([i])
+                w.writerow([0])
         w.writerow(rankTrueRecommend)
         
 
