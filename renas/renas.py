@@ -17,7 +17,7 @@ _logger = getLogger(__name__)
 _logger.setLevel(DEBUG)
 operationDic = {"all": {}, "Normalize": {}, "None": {}}
 _RELATION_LIST = [
-    "subclass","subsubclass","parents","ancestor","methods","fields","siblings","comemnt","type","enclosingCLass","assignment","methodInvocated","parameterArgument","parameter","enclosingMethod","argument"
+    "subclass","subsubclass","parents","ancestor","methods","fields","siblings","comemnt","type","enclosingCLass","assignment","methodInvocated","parameterArgument","parameter","enclosingMethod","argument", "parameterOverload"
 ]
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 
@@ -26,6 +26,11 @@ RANK_DISTANSE_PENALTY = 1
 RANK_WORD_PENALTY = 5
 RANK_FILE_PENALTY = 1
 UPPER = 20
+
+IS_ALL_RECOMMEND = True
+IS_NORMALIZE_RECOMMEND = True
+IS_RELATION_RECOMMEND = True
+
 #コマンドライン引数処理
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -65,11 +70,10 @@ def polishJsonData(jsonData):
     )
     return
 
-
 def getRelatedIds(relationSeries):
     relatedIds = set()
     for ids in relationSeries:
-        relatedIds.update(id.split(':')[0] for id in ids.split(' - '))
+        relatedIds.update(id.rsplit(':', 1)[0] for id in ids.split(' - '))
     return relatedIds
 
 def recordOperation(commit, op,normalize, all, exception={}):
@@ -138,6 +142,7 @@ def coRenameRelation(tableData, triggerData, triggerRename):
             if recommended is not None:
                 _logger.debug(f'{candidate["name"]} should be renamed to {recommended["join"]}')
                 recommended['hop'] = hops
+                recommended['rank'] = 1
                 result.append(recommended)
                 nextIds.update(getRelatedIds(candidate[_RELATION_LIST].dropna()))
         nextIds = nextIds - triedIds
@@ -268,8 +273,8 @@ def recommend(repo, force):
     resultRelationNormalize = {}
     resultAllNormalize = {}
     outputNone = root.joinpath('recommend_none.json')
-    outputRelation = root.joinpath('recommend_relation.json')
-    outputRelationNormalize = root.joinpath('recommend_relation_normalize.json')
+    outputRelation = root.joinpath('recommend_relation_ranking.json')
+    outputRelationNormalize = root.joinpath('recommend_relation_normalize_ranking.json')
     outputAllNormalize = root.joinpath('recommend_all_normalize.json')
     outputOperation = root.joinpath('operations.json')
 
@@ -315,26 +320,31 @@ def recommend(repo, force):
             commitStartTime = time.time()
             # all
             _logger.info(f'start recommend: {commit} | {gIdx}')
-            #resultNone[commit][gIdx] = doCoRename(commit, tableData, trigger)
+            #/ resultNone[commit][gIdx] = doCoRename(commit, tableData, trigger)
             # relation
-            resultRelation[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True)
+            if IS_RELATION_RECOMMEND:
+                resultRelation[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True)
             # relation normalize
-            resultRelationNormalize[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True, normalize=True)
+            if IS_NORMALIZE_RECOMMEND:
+                resultRelationNormalize[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True, normalize=True)
             # all normalize
-            resultAllNormalize[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True, normalize=True, all=True)
+            if IS_ALL_RECOMMEND:
+                resultAllNormalize[commit][gIdx] = doCoRename(commit, tableData, trigger, relation=True, normalize=True, all=True)
             commitEndTime = time.time()
             _logger.info(f'end recommend: {commit} | {gIdx}')
             _logger.info(f'commit elapsed time: {timedelta(seconds=(commitEndTime - commitStartTime))}')
     # output
     _logger.info('export result')
     #with open(outputNone, 'w') as ON, \
-    with open(outputRelation, 'w') as OR, \
-            open(outputRelationNormalize, 'w') as ORN, \
-            open(outputAllNormalize, 'w') as OAN:
-        #simplejson.dump(resultNone, ON, indent=4, ignore_nan=True)
-        simplejson.dump(resultRelation, OR, indent=4, ignore_nan=True)
-        simplejson.dump(resultRelationNormalize, ORN, indent=4, ignore_nan=True)
-        simplejson.dump(resultAllNormalize, OAN, indent=4, ignore_nan=True)
+    if IS_RELATION_RECOMMEND:
+        with open(outputRelation, 'w') as OR:
+            simplejson.dump(resultRelation, OR, indent=4, ignore_nan=True)
+    if IS_NORMALIZE_RECOMMEND:
+        with open(outputRelationNormalize, 'w') as ORN:
+            simplejson.dump(resultRelationNormalize, ORN, indent=4, ignore_nan=True)
+    if IS_ALL_RECOMMEND:
+        with open(outputAllNormalize, 'w') as OAN:
+            simplejson.dump(resultAllNormalize, OAN, indent=4, ignore_nan=True)
 
     with open(outputOperation, 'w') as oo:
         simplejson.dump(operationDic, oo, indent=4, ignore_nan=True)

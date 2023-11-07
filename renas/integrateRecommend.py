@@ -22,8 +22,9 @@ import statistics
 _logger = getLogger(__name__)
 
 researchFileNames = {
+                    "recommend_relation_normalize_ranking.json": "Normalize_ranking",
                     "recommend_relation_normalize.json": "Normalize",
-                    "recommend_relation.json": "Relation",
+                    "recommend_relation_ranking.json": "Relation_ranking",
                     "recommend_all_normalize.json": "all"}
 detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewname', 'op',
                 'commitPool', 'researchCommit', 'file', 'line', 'oldname' ,'truename', 'recommendname']]
@@ -260,6 +261,7 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, op):
                 trueRecommendIndex.append([i, k])
                 flag = True
                 break
+        '''
         if op != "None":
             if flag:
                 continue
@@ -267,6 +269,7 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, op):
             if ri == None:
                 continue
             trueRecommendIndex.append([i, ri])
+        '''
         #print(i, ri)
 
     for t in trueRecommendIndex:
@@ -492,6 +495,7 @@ def evaluate(renames, recommendation, tableData, op):
                     rankTrueRecommend[rec["rank"]-1][0] += 1
                 flag = True
                 break
+        '''
         if op != "None":
             if flag:
                 continue
@@ -501,6 +505,7 @@ def evaluate(renames, recommendation, tableData, op):
             trueRecommendIndex.append([i, ri])
             if op == "all":
                 rankTrueRecommend[recommendation[ri]["rank"]-1][0] += 1
+        '''
         #print(i, ri)
                 
     '''
@@ -553,7 +558,8 @@ if __name__ ==  "__main__":
                 continue
             #print(commit)
             tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
-            tableData = ExTable(tablePath)
+            #tableData = ExTable(tablePath)
+            tableData = None
             if fileName == "recommend_none.json":
                 countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op)
             else:

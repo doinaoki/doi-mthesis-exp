@@ -374,19 +374,21 @@ class Rename:
                 oldWord = format[2]
                 newWord = format[3]
                 if len(oldWord) < len(newWord):
-                    if oldWord in oldDict["normalized"]:
-                        id = oldDict["normalized"].index(oldWord)
+                    if oldWord in oldDict["split"]:
+                        id = oldDict["split"].index(oldWord)
                         oldDict["normalized"][id] = newWord
                         oldDict["heuristic"][id] = "ST"
                         print("Expand2")
+                    '''
                     if newWord in oldDict["normalized"]:
                         id = oldDict["normalized"].index(newWord)
                         oldDict["heuristic"][id] = "ST"
                     return
+                    '''
                 else:
                     ##H2の省略語作成実装
-                    if oldWord in oldDict["normalized"]:
-                        id = oldDict["normalized"].index(oldWord)
+                    if oldWord in oldDict["split"]:
+                        id = oldDict["split"].index(oldWord)
                         oldDict["normalized"][id] = newWord
                         oldDict["heuristic"][id] = "ST"
                         oldDict["postag"][id] = "NN"
@@ -396,18 +398,20 @@ class Rename:
                 oldWord = format[2]
                 newWord = format[3]
                 if len(oldWord) < len(newWord):
-                    if oldWord in oldDict["normalized"]:
-                        id = oldDict["normalized"].index(oldWord)
+                    if oldWord in oldDict["split"]:
+                        id = oldDict["split"].index(oldWord)
                         oldDict["normalized"][id] = newWord
                         oldDict["heuristic"][id] = "ST"
+                    '''
                     if newWord in oldDict["normalized"]:
                         id = oldDict["normalized"].index(newWord)
                         oldDict["heuristic"][id] = "ST"
                     return
+                    '''
                 else:
                     ##H3の省略語作成実装
-                    if oldWord in oldDict["normalized"]:
-                        id = oldDict["normalized"].index(oldWord)
+                    if oldWord in oldDict["split"]:
+                        id = oldDict["split"].index(oldWord)
                         oldDict["normalized"][id] = newWord
                         oldDict["heuristic"][id] = "ST"
                         oldDict["postag"][id] = "NN"
@@ -417,16 +421,18 @@ class Rename:
             oldWord = format[1]
             newWord = format[2]
             #ToDo: newwordが既に含まれていた場合returnを返す
-            if oldWord in oldDict["normalized"]:
-                id = oldDict["normalized"].index(oldWord)
+            if oldWord in oldDict["expanded"]:
+                id = oldDict["expanded"].index(oldWord)
                 oldDict["postag"][id] = "NN"
                 #仮
                 oldDict["normalized"][id] = newWord
+            '''
             elif oldWord in oldDict["expanded"]:
                 id = oldDict["expanded"].index(oldWord)
                 oldDict["postag"][id] = "NN"
                 oldDict["normalized"][id] = newWord
             return
+            '''
         else:
             _logger.error("undefined format operation")
 # Todo same word handling
@@ -530,7 +536,6 @@ class Rename:
         afterWord = [newNorm[after] if after < len(newNorm) else '']
         beforeIdx = self.__findIndex(beforeWord, oldNorm)
         afterIdx = self.__findIndex(afterWord, oldNorm)
-
         if afterIdx != -1:
             contextIdx = afterIdx
             replIdx = afterIdx
@@ -549,7 +554,8 @@ class Rename:
         self.__replaceSlice(oldDict['delimiter'], replIdx, replIdx, newDelim)
         if self.__normalize:
             # postag
-            newPostag = [oldDict['postag'][contextIdx]] * insertedWordLen
+            #newPostag = [oldDict['postag'][contextIdx]] * insertedWordLen
+            newPostag = ["NN"] * insertedWordLen
             self.__replaceSlice(oldDict['postag'], replIdx, replIdx, newPostag)
             # heuristic
             newHeuristic = [oldDict['heuristic'][contextIdx]] * insertedWordLen
@@ -601,7 +607,7 @@ class Rename:
             # heuristic
             newHeuristic = [oldDict['heuristic'][contextIdx]] * insertedWordLen
             self.__replaceSlice(oldDict['heuristic'], replIdx, replIdx, newHeuristic)
-
+    
 
     def __findIndex(self, words, target):
         iterRange = len(target) - len(words) + 1
