@@ -19,7 +19,7 @@ class ExTable:
                 'expanded': literal_eval,
                 'postag': literal_eval,
                 'normalized': literal_eval
-            }).dropna(subset=['name'])
+            }).dropna(subset=['name', 'split'])
         tableData = tableData[tableData['line'] != -1]
         tableData['split'] = tableData['split'].map(lambda x: str(x).split(';'))
         tableData['delimiter'] = tableData['delimiter'].map(lambda x: str(x).split(';'))

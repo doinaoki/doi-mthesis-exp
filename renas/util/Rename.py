@@ -156,6 +156,7 @@ class Rename:
         if self.__diff == None:
             oldSplit = self.__old["normalized"]
             self.__diff = []
+        
             if self.__all == True:
                 #self.__diff += self.extractChangeCase()
                 self.__diff += self.extractOrder()

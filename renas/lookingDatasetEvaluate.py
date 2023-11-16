@@ -18,7 +18,7 @@ from .util.Rename import Rename
 researchFileNames = {
                     "recommend_relation_normalize.json": "Normalize",
                     "recommend_relation_normalize_ranking.json": "normalize_ranking",
-                    "recommend_relation.json": "Relation",
+                    "recommend_relation_ranking.json": "Relation",
                     "recommend_all_normalize.json": "all"}
 
 allPrecision = {op: [] for op in researchFileNames.values()}

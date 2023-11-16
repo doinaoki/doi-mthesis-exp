@@ -21,15 +21,15 @@ _RELATION_LIST = [
 ]
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 
-RANK = 11
+RANK = 10
 RANK_DISTANSE_PENALTY = 1
 RANK_WORD_PENALTY = 5
 RANK_FILE_PENALTY = 1
 UPPER = 20
 
 IS_ALL_RECOMMEND = True
-IS_NORMALIZE_RECOMMEND = True
-IS_RELATION_RECOMMEND = True
+IS_NORMALIZE_RECOMMEND = False
+IS_RELATION_RECOMMEND = False
 
 #コマンドライン引数処理
 def setArgument():
@@ -243,10 +243,10 @@ def coRenameRelation(tableData, triggerData, triggerRename):
             if candidate["id"] in triedIds:
                 continue
             if candidate["files"] != searchDataCopy["files"]:
-                if nextScore + RANK_FILE_PENALTY < RANK:
+                if nextScore + RANK_FILE_PENALTY <= trueRecommendScore:
                     heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY, candidate["id"]])
             else:
-                if nextScore < RANK:
+                if nextScore <= trueRecommendScore:
                     heapq.heappush(nextIds, [nextScore, candidate["id"]])
         _logger.debug(f'next ids: {nextIds}')
     print(trueRecommendScore)
