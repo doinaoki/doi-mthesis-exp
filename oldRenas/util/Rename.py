@@ -79,6 +79,9 @@ class Rename:
         idDict['join'] = joinedWords
         _logger.debug(f'join: {joinedWords}')
         _logger.debug(f'{idDict["name"]} should be renamed to {idDict["join"]}')
+        idDict["similarity"] = self.wordSimilarity(beforeWordList)
+        idDict["diffLine"] = abs(idDict["line"] - self.__old["line"])
+        idDict["sameFile"] = 1 if idDict["files"] == self.__old["files"] else 2
 
         return idDict
 
@@ -90,6 +93,12 @@ class Rename:
         old['delimiter'] = detail['delimiter']
         old['normalized'] = deepcopy(old['split'])
         return
+
+    def wordSimilarity(self, recommendName):
+        oldName = self.__old["normalized"]
+        similarity = len(set(oldName) & set(recommendName)) * 2 / (len(oldName) + len(recommendName))
+        
+        return 1- similarity
 
     def __getNameDetail(self, name):
         result = splitIdentifier(name)

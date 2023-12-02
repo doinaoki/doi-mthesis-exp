@@ -20,10 +20,28 @@ _RELATION_LIST = [
     "subclass","subsubclass","parents","ancestor","methods","fields","siblings","comemnt","type","enclosingCLass","assignment","methodInvocated","parameterArgument","parameter","enclosingMethod","argument", "parameterOverload"
 ]
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
-
-RANK = 10
+_RELATION_COST = {
+    "subclass": 1.5,
+    "subsubclass": 2,
+    "parents": 1.5,
+    "ancestor": 2,
+    "methods": 2,
+    "fields": 2,
+    "siblings": 0.5,
+    "comemnt": 1,
+    "type": 1.5,
+    "enclosingCLass": 2,
+    "assignment": 0.5,
+    "methodInvocated": 1.25,
+    "parameterArgument": 1,
+    "parameter": 1.5,
+    "enclosingMethod": 1.5,
+    "argument": 1, 
+    "parameterOverload": 0.5
+}
+RANK = 13
 RANK_DISTANSE_PENALTY = 1
-RANK_WORD_PENALTY = 5
+RANK_WORD_PENALTY = 4
 RANK_FILE_PENALTY = 1
 UPPER = 20
 
@@ -75,6 +93,15 @@ def getRelatedIds(relationSeries):
     for ids in relationSeries:
         relatedIds.update(id.rsplit(':', 1)[0] for id in ids.split(' - '))
     return relatedIds
+
+def getRelatedIdsAndCost(relationSeries):
+    relatedIds = set()
+    idToCost = {}
+    for i, ids in relationSeries.items():
+        idList = {id.rsplit(':', 1)[0] for id in ids.split(' - ')}
+        relatedIds.update(idList)
+        idToCost.update([(id, _RELATION_COST[i]) for id in idList])
+    return relatedIds, idToCost
 
 def recordOperation(commit, op,normalize, all, exception={}):
     opType = ""
@@ -198,7 +225,7 @@ def coRenameRelation(tableData, triggerData, triggerRename):
         _logger.debug(f'next ids: {nextIds}')
     return result
 '''
-
+'''
 def coRenameRelation(tableData, triggerData, triggerRename):
     triedIds = set()
     triggerScore = 0
@@ -213,15 +240,19 @@ def coRenameRelation(tableData, triggerData, triggerRename):
         score ,searchId = heapq.heappop(nextIds)
         if trueRecommendScore < score:
             continue
+        #この処理がだいぶ重い0.003   change
         searchData = tableData.selectDataById(searchId)
         #print(score, searchId)
+        #0.0002   change
         if searchId in triedIds:
             continue
         triedIds.add(searchId)
 
         #推薦実施
+        #0.00005
         searchDataCopy = deepcopy(searchData.to_dict())
         #print(searchDataCopy["name"])
+        #0.00006
         nextScore = score + RANK_DISTANSE_PENALTY
         if searchDataCopy['id'] != triggerData['id']:
             recommended = triggerRename.coRename(searchDataCopy)
@@ -234,11 +265,15 @@ def coRenameRelation(tableData, triggerData, triggerRename):
             else:
                 nextScore += RANK_WORD_PENALTY
 
-        #次に調べるべきidを格納
+
+        #次に調べるべきidを格納 0.0007  change
         candidateIds = getRelatedIds(searchData[_RELATION_LIST].dropna())
+        #0.003  change
         candidateData = tableData.selectDataByIds(candidateIds)
         candidateLen = len(candidateData)
+        #0.04
         for ci in range(candidateLen):
+            #0.0001  change
             candidate = candidateData.iloc[ci].to_dict()
             if candidate["id"] in triedIds:
                 continue
@@ -249,8 +284,83 @@ def coRenameRelation(tableData, triggerData, triggerRename):
                 if nextScore <= trueRecommendScore:
                     heapq.heappush(nextIds, [nextScore, candidate["id"]])
         _logger.debug(f'next ids: {nextIds}')
+
     print(trueRecommendScore)
+    print(len(triedIds))
     return result
+'''
+
+def coRenameRelation(tableData, triggerData, triggerRename):
+    triedIds = set()
+    triggerScore = 0
+    startHop = 0
+    nextIds = []
+    heapq.heappush(nextIds, [triggerScore, startHop, triggerData["id"]])  
+    result = []
+    _logger.debug(f'next ids: {nextIds}')
+    trueRecommend = 0
+    trueRecommendScore = RANK
+    while len(nextIds) > 0:
+        #調べるidを取得する
+        score, hop, searchId = heapq.heappop(nextIds)
+        if trueRecommendScore < score:
+            continue
+        #この処理がだいぶ重い0.003   change
+        searchData = tableData.selectDataById(searchId)
+        #print(score, searchId)
+        #0.0002   change
+        if searchId in triedIds:
+            continue
+        triedIds.add(searchId)
+
+        #推薦実施
+        #0.00005
+        nextScore = score
+        searchDataCopy = deepcopy(searchData.to_dict())
+        #print(searchDataCopy["name"])
+        #0.00006
+        if searchDataCopy['id'] != triggerData['id']:
+            recommended = triggerRename.coRename(searchDataCopy)
+            if recommended is not None:
+                nextScore = nextScore + recommended["similarity"]
+                if nextScore <= trueRecommendScore:
+                    recommended['rank'] = nextScore
+                    recommended['hop'] = hop
+                    result.append(recommended)
+                    trueRecommend += 1
+                    if trueRecommend == UPPER:
+                        trueRecommendScore = nextScore
+            else:
+                nextScore += RANK_WORD_PENALTY
+
+        if nextScore >= trueRecommendScore:
+            continue
+        #次に調べるべきidを格納 0.0007  change
+        candidateIds, idCost = getRelatedIdsAndCost(searchData[_RELATION_LIST].dropna())
+        candidateIds = candidateIds - triedIds
+        #0.003  change
+        candidateData = tableData.selectDataByIds(candidateIds)[["id","files"]].values
+        candidateLen = len(candidateData)
+        #0.04
+        for ci in range(candidateLen):
+            #0.0001  change
+            candidate = candidateData[ci]
+            distanceCost = idCost[candidate[0]]
+            if candidate[1] != searchDataCopy["files"]:
+                if nextScore + RANK_FILE_PENALTY + distanceCost <= trueRecommendScore:
+                    heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY + distanceCost, hop+1, candidate[0]])
+            else:
+                if nextScore + distanceCost <= trueRecommendScore:
+                    heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate[0]])
+        _logger.debug(f'next ids: {nextIds}')
+
+    print(trueRecommendScore)
+    print(len(triedIds))
+    return result
+
+
+def relationCost(relation):
+    pass
 
 
 def recommend(repo, force):

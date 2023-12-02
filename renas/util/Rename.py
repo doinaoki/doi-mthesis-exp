@@ -85,6 +85,8 @@ class Rename:
             _logger.debug(f'not a candidate')
             return None
         _logger.debug(f'AFTER {printDict(idDict, "case", "pattern", "delimiter", "heuristic", "postag", self.__wordColumn)}')
+        #類似度を測る
+        idDict["similarity"] = self.wordSimilarity(beforeWordList)
         # word generation
         if self.__normalize:
             # inflect
@@ -103,6 +105,8 @@ class Rename:
         idDict['join'] = joinedWords
         _logger.debug(f'join: {joinedWords}')
         _logger.debug(f'{idDict["name"]} should be renamed to {idDict["join"]}')
+        idDict["diffLine"] = abs(idDict["line"] - self.__old["line"])
+        idDict["sameFile"] = 1 if idDict["files"] == self.__old["files"] else 2
         return idDict
 
     def __overWriteDetail(self, old):
@@ -174,6 +178,12 @@ class Rename:
                 elif diff[0] == "delete":
                     self.__diff.append((diff[0], tuple(oldSplit[diff[1]:diff[2]])))
 
+    def wordSimilarity(self, recommendName):
+        oldName = self.__old["normalized"]
+        similarity = len(set(oldName) & set(recommendName)) * 2 / (len(oldName) + len(recommendName))
+        
+        return 1- similarity
+
     #変更操作format抽出
     def extractFormat(self):
         oldNormalize = self.__old[self.__wordColumn]
@@ -209,10 +219,21 @@ class Rename:
                 formatAbbreviation.append(["format", ("Abbreviation", "H3", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])])
 
         #formatAbbreviation = [["format", word, ("Abbreviation", oldSplit[oldExpanded.index(word)], newSplit[newExpanded.index(word)])] for word in equalExpandedWords-equalSplitWords if oldExpanded.index(word) not in equalSplitWordsIndex]
-        formatNormalize = [["format", ("Normalize", oldExpanded[oldNormalize.index(word)], newExpanded[newNormalize.index(word)])] for word in equalNormalizeWords-equalExpandedWords if oldNormalize.index(word) not in equalExpandedWordsIndex]
+        formatConjugate = []
+        formatPlural = []
+        for word in equalNormalizeWords-equalExpandedWords :
+            if oldNormalize.index(word) not in equalExpandedWordsIndex:
+                oldIndex = oldNormalize.index(word)
+                newIndex = newNormalize.index(word)
+                if "V" in self.__old["postag"][oldIndex]:
+                    formatConjugate.append(["format", ("Conjugate", oldExpanded[oldIndex], newExpanded[newIndex])])
+                else:
+                    formatPlural.append(["format", ("Plural", oldExpanded[oldIndex], newExpanded[newIndex])])
+
+        #formatNormalize = [["format", ("Normalize", oldExpanded[oldNormalize.index(word)], newExpanded[newNormalize.index(word)])] for word in equalNormalizeWords-equalExpandedWords if oldNormalize.index(word) not in equalExpandedWordsIndex]
         heuH1 = [["format", heuH1]] if heuH1[2] != [] else []
-        _logger.debug(formatAbbreviation + formatNormalize)
-        return formatAbbreviation + formatNormalize + heuH1
+        _logger.debug(formatAbbreviation + formatConjugate + formatPlural)
+        return formatAbbreviation + formatConjugate + formatPlural + heuH1
         
     #変更操作changeCase抽出
     def extractChangeCase(self):
@@ -418,7 +439,7 @@ class Rename:
                         oldDict["postag"][id] = "NN"
                     print("Abbreviation3")
                     return
-        elif operation == "Normalize":
+        elif operation == "Conjugate" or operation == "Plural":
             oldWord = format[1]
             newWord = format[2]
             #ToDo: newwordが既に含まれていた場合returnを返す

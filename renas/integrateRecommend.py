@@ -11,6 +11,7 @@ import subprocess
 import argparse
 from multiprocessing import Pool
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG, log
+import operator
 
 from .util.ExTable import ExTable
 from datetime import datetime, date, timedelta
@@ -22,9 +23,9 @@ import statistics
 _logger = getLogger(__name__)
 
 researchFileNames = {
-                    "recommend_relation_normalize_ranking.json": "Normalize_ranking",
-                    "recommend_relation_normalize.json": "Normalize",
-                    "recommend_relation_ranking.json": "Relation_ranking",
+                    #"recommend_relation_normalize_ranking.json": "Normalize_ranking",
+                    #"recommend_relation_normalize.json": "Normalize",
+                    #"recommend_relation_ranking.json": "Relation_ranking",
                     "recommend_all_normalize.json": "all"}
 detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewname', 'op',
                 'commitPool', 'researchCommit', 'file', 'line', 'oldname' ,'truename', 'recommendname']]
@@ -33,6 +34,7 @@ result_info = []
 allPrecision = {op: [] for op in researchFileNames.values()}
 allRecall = {op: [] for op in researchFileNames.values()}
 allFscore = {op: [] for op in researchFileNames.values()}
+TOPN = 20
 
 gitRe = re.compile(r'(?:^commit)\s+(.+)\nAuthor:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
 numberToCommit = {}
@@ -117,16 +119,30 @@ def getCommitsInfo(commit):
     #複数コミットの取り方
     #dateが+2のコミットを含むようにする(仮)根拠なし
     researchCommits = []
+    '''
     num = 2
     fromCommitDate = commitToDate[commit]
     toCommitDate = commitToDate[commit] + timedelta(days=num)
     for date, info in dateToCommit.items():
         if fromCommitDate <= date < toCommitDate:
             researchCommits.append(dateToCommit[date])
+    '''
+    researchCommits.append(commit)
     return researchCommits
 
 def getKey(dic):
     return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
+
+def checkMeaningful(operations):
+    meaningful = ["insert", "order", "delete", "replace"]
+    for op in operations:
+        if op[0] in meaningful:
+            return False
+        if op[0] == "format":
+            if op[1][0] == "Plural":
+                return False
+    print(operations)
+    return True
 
 def recommendCommit(commit, tableData, operations, recommendName, renameInfo, opIds):
     #調査体操となる複数コミットを取得
@@ -146,6 +162,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                 print(f"something wrong {key}")
                 continue
             ops = operations[c][key]
+            #TODO:  format exclude
             for op in ops:
                 #must change
                 if str(op) not in opGroup:
@@ -165,6 +182,8 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
             continue
         triggerOp = operations[commit][triggerKey]
         triggerRec = recommendName[triggerKey]
+        if checkMeaningful(triggerOp):
+            continue
         renames = []
         rKeys = []
         for op in triggerOp:
@@ -177,6 +196,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                     continue
                 rKeys.append(getKey(rDic))
                 renames.append(rDic)
+        triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))[0:TOPN+1]
 
         if len(renames) < 1:
             #print(triggerOp)
@@ -215,7 +235,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         allPrecision[opIds].append(precision)
         allRecall[opIds].append(recall)
         allFscore[opIds].append(fscore)
-        addRankRecommend(triggerRec, opIds)
+        #addRankRecommend(triggerRec, opIds)
         setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
         setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
         print(f"operation chunk = {triggerOp}")
@@ -491,8 +511,8 @@ def evaluate(renames, recommendation, tableData, op):
             recKey = str([rec["line"], rec["typeOfIdentifier"], rec["name"], rec["files"]])
             if key == recKey:
                 trueRecommendIndex.append([i, k])
-                if op == "all":
-                    rankTrueRecommend[rec["rank"]-1][0] += 1
+                #if op == "all":
+                    #rankTrueRecommend[rec["rank"]-1][0] += 1
                 flag = True
                 break
         '''
@@ -607,6 +627,6 @@ if __name__ ==  "__main__":
             else:
                 w.writerow([i])
                 w.writerow([0])
-        w.writerow(rankTrueRecommend)
+        #w.writerow(rankTrueRecommend)
         
 

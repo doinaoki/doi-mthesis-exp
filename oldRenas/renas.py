@@ -65,7 +65,7 @@ def polishJsonData(jsonData):
 def getRelatedIds(relationSeries):
     relatedIds = set()
     for ids in relationSeries:
-        relatedIds.update(id.split(':')[0] for id in ids.split(' - '))
+        relatedIds.update(id.rsplit(':', 1)[0] for id in ids.split(' - '))
     return relatedIds
 
 
