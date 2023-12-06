@@ -39,11 +39,11 @@ _RELATION_COST = {
     "argument": 1, 
     "parameterOverload": 0.5
 }
-RANK = 13
+RANK = 20
 RANK_DISTANSE_PENALTY = 1
 RANK_WORD_PENALTY = 4
 RANK_FILE_PENALTY = 1
-UPPER = 20
+UPPER = 1000
 
 IS_ALL_RECOMMEND = True
 IS_NORMALIZE_RECOMMEND = False
@@ -297,27 +297,29 @@ def coRenameRelation(tableData, triggerData, triggerRename):
     nextIds = []
     heapq.heappush(nextIds, [triggerScore, startHop, triggerData["id"]])  
     result = []
-    _logger.debug(f'next ids: {nextIds}')
     trueRecommend = 0
     trueRecommendScore = RANK
+    # 4:30
     while len(nextIds) > 0:
-        #調べるidを取得する
+        #調べるidを取得する 0.34  190779
         score, hop, searchId = heapq.heappop(nextIds)
         if trueRecommendScore < score:
             continue
-        #この処理がだいぶ重い0.003   change
-        searchData = tableData.selectDataById(searchId)
         #print(score, searchId)
-        #0.0002   change
+        #0.0002   change  0.006   10894
         if searchId in triedIds:
             continue
         triedIds.add(searchId)
 
+
+        #この処理がだいぶ重い0.003  18.85  10894
+        searchData = tableData.selectDataById(searchId)
         #推薦実施
-        #0.00005
+        #0.00005  0.623  10894
         nextScore = score
         searchDataCopy = deepcopy(searchData.to_dict())
-        #print(searchDataCopy["name"])
+
+        #print(searchDataCopy["name"])  0.711  10894
         #0.00006
         if searchDataCopy['id'] != triggerData['id']:
             recommended = triggerRename.coRename(searchDataCopy)
@@ -335,15 +337,15 @@ def coRenameRelation(tableData, triggerData, triggerRename):
 
         if nextScore >= trueRecommendScore:
             continue
-        #次に調べるべきidを格納 0.0007  change
+        #次に調べるべきidを格納 0.0007  change  14.90  6040
         candidateIds, idCost = getRelatedIdsAndCost(searchData[_RELATION_LIST].dropna())
         candidateIds = candidateIds - triedIds
         #0.003  change
         candidateData = tableData.selectDataByIds(candidateIds)[["id","files"]].values
         candidateLen = len(candidateData)
-        #0.04
+        #0.04  0.147   上0:25,  下 0:01
         for ci in range(candidateLen):
-            #0.0001  change
+            #0.0001  change  6040
             candidate = candidateData[ci]
             distanceCost = idCost[candidate[0]]
             if candidate[1] != searchDataCopy["files"]:
@@ -352,7 +354,6 @@ def coRenameRelation(tableData, triggerData, triggerRename):
             else:
                 if nextScore + distanceCost <= trueRecommendScore:
                     heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate[0]])
-        _logger.debug(f'next ids: {nextIds}')
 
     print(trueRecommendScore)
     print(len(triedIds))
@@ -421,7 +422,7 @@ def recommend(repo, force):
         resultRelationNormalize[commit]['goldset'] = goldSet.to_dict(orient='records')
 
         resultAllNormalize[commit] = {}
-        resultAllNormalize[commit]['goldset'] = goldSet.to_dict(orient='record')
+        resultAllNormalize[commit]['goldset'] = goldSet.to_dict(orient='records')
 
         size = goldSet.shape[0]
         for gIdx in range(size):

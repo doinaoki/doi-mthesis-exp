@@ -16,10 +16,10 @@ from copy import deepcopy
 from .util.Rename import Rename
 
 researchFileNames = {
+                    "recommend_none.json": "None",
                     "recommend_relation_normalize.json": "Normalize",
-                    "recommend_relation_normalize_ranking.json": "normalize_ranking",
-                    "recommend_relation_ranking.json": "Relation",
-                    "recommend_all_normalize.json": "all"}
+                    "recommend_relation.json": "Relation",
+                    "recommend_all_normalize.json": "All"}
 
 allPrecision = {op: [] for op in researchFileNames.values()}
 allRecall = {op: [] for op in researchFileNames.values()}
@@ -63,7 +63,7 @@ def setRename(path, fileName):
     return recommendName, renameInfo
 
 def detail(triggerRename, renames, recommend, op):
-    if op != "all":
+    if op != "All":
         return
 
     triggerKey = triggerRename["commit"] + triggerRename["file"] + str(triggerRename["line"]) + triggerRename["oldName"]

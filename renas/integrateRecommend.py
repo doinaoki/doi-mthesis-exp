@@ -19,14 +19,15 @@ import pandas as pd
 from .util.Name import KgExpanderSplitter
 from .util.Rename import Rename
 import statistics
+from .showRQFigure import showRQFigure
 
 _logger = getLogger(__name__)
 
 researchFileNames = {
-                    #"recommend_relation_normalize_ranking.json": "Normalize_ranking",
-                    #"recommend_relation_normalize.json": "Normalize",
-                    #"recommend_relation_ranking.json": "Relation_ranking",
-                    "recommend_all_normalize.json": "all"}
+                    "recommend_none.json": "None",
+                    "recommend_relation_normalize.json": "Normalize",
+                    "recommend_relation.json": "Relation",
+                    "recommend_all_normalize.json": "All"}
 detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewname', 'op',
                 'commitPool', 'researchCommit', 'file', 'line', 'oldname' ,'truename', 'recommendname']]
 
@@ -42,10 +43,11 @@ dateToCommit = {}
 commitToNumber = {}
 commitToDate = {}
 
-RANK = 14
+RANK = 20
 rankTrueRecommend = [[0, 0] for _ in range(RANK)]
 
 missOperation = {op: {"insert": [0, 0, 0], "delete": [0, 0, 0], "replace": [0, 0, 0], "order": [0, 0, 0], "format": [0, 0, 0], "changeCase": [0, 0, 0], "changePattern": [0, 0, 0]} for op in researchFileNames.values()}
+_showRQFigure = showRQFigure(TOPN, RANK)
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -162,7 +164,6 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                 print(f"something wrong {key}")
                 continue
             ops = operations[c][key]
-            #TODO:  format exclude
             for op in ops:
                 #must change
                 if str(op) not in opGroup:
@@ -196,7 +197,8 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                     continue
                 rKeys.append(getKey(rDic))
                 renames.append(rDic)
-        triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))[0:TOPN+1]
+        if opIds == "All" or opIds == "Normalize":
+            triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))
 
         if len(renames) < 1:
             #print(triggerOp)
@@ -236,11 +238,13 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         allRecall[opIds].append(recall)
         allFscore[opIds].append(fscore)
         #addRankRecommend(triggerRec, opIds)
-        setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
-        setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
+        if opIds == "All":
+            setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
+            setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
         print(f"operation chunk = {triggerOp}")
         print(f"precision = {precision},  recall = {recall},\
                exact = {exacts}, fscore = {fscore} ")
+        _showRQFigure.update(trigger, triggerRec, renames, trueRecommendIndex, opIds)
     
     detail_info.append([commit, "allRenames", allRenames, "allRecommend", allRecommend,
                         "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend if allRecommend != 0 else 0,
@@ -259,7 +263,7 @@ def setMissOperation(opId, setOp, reNum, trigNum, trueNum):
 
 def addRankRecommend(recommendations, op):
     for rec in recommendations:
-        if op == "all":
+        if op == "All":
             rankTrueRecommend[rec["rank"]-1][1] += 1
 
 
@@ -505,7 +509,7 @@ def evaluate(renames, recommendation, tableData, op):
     for i in range(len(renames)):
         r = renames[i]
         key = str([r["line"], r["typeOfIdentifier"], r["oldname"], r["files"]])
-        flag = False
+        #flag = False
         for k in range(len(recommendation)):
             rec = recommendation[k]
             recKey = str([rec["line"], rec["typeOfIdentifier"], rec["name"], rec["files"]])
@@ -513,7 +517,7 @@ def evaluate(renames, recommendation, tableData, op):
                 trueRecommendIndex.append([i, k])
                 #if op == "all":
                     #rankTrueRecommend[rec["rank"]-1][0] += 1
-                flag = True
+                #flag = True
                 break
         '''
         if op != "None":
@@ -566,6 +570,7 @@ if __name__ ==  "__main__":
     #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
     for fileName, op in researchFileNames.items():
         operations = setOperations(args.source, "all")
+        _showRQFigure.setOperations(operations)
         recommendName, renameInfo = setRename(args.source, fileName)
         result_info.append([fileName])
 
@@ -594,7 +599,9 @@ if __name__ ==  "__main__":
         result_info.append([""])
     
     writeMissOperation(missCSV)
-
+    _showRQFigure.calculateData()
+    #_showRQFigure.showConsole()
+    _showRQFigure.showFigure(args.source)
 
     with open(detailCSV, 'w') as dCSV:
         w = csv.writer(dCSV)

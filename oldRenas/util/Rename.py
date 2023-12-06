@@ -82,7 +82,8 @@ class Rename:
         idDict["similarity"] = self.wordSimilarity(beforeWordList)
         idDict["diffLine"] = abs(idDict["line"] - self.__old["line"])
         idDict["sameFile"] = 1 if idDict["files"] == self.__old["files"] else 2
-
+        idDict['rank'] = 1
+        idDict['hop'] = 1
         return idDict
 
     def __overWriteDetail(self, old):

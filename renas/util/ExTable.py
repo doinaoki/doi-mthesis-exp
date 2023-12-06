@@ -25,6 +25,7 @@ class ExTable:
         tableData['delimiter'] = tableData['delimiter'].map(lambda x: str(x).split(';'))
         tableData['pattern'] = tableData['pattern'].map(lambda x: x if isinstance(x, list) else [x] if not pd.isna(x) else [])
         tableData['case'] = tableData['case'].map(lambda x: str(x).split(';'))
+        self.__tableDict = tableData.set_index('id', drop=False).to_dict(orient='index')
         _logger.debug(f'successfully read')
         return tableData
 
@@ -68,3 +69,8 @@ class ExTable:
             _logger.warning(f'Cannot selectData by id {id}\n')
             return None 
         return data.iloc[0]
+    '''
+    def selectDataById(self, id):
+        data = self.__tableDict[id]
+        return data
+    '''

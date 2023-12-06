@@ -113,7 +113,6 @@ def coRenameRelation(tableData, triggerData, triggerRename):
             if recommended is not None:
                 _logger.debug(f'{candidate["name"]} should be renamed to {recommended["join"]}')
                 recommended['hop'] = hops
-                recommended['rank'] = 1
                 result.append(recommended)
                 nextIds.update(getRelatedIds(candidate[_RELATION_LIST].dropna()))
         nextIds = nextIds - triedIds
