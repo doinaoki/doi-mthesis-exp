@@ -43,24 +43,25 @@ if __name__ == '__main__':
     csvRoot = pathlib.Path(args.dir)
     csvFile = csvRoot.joinpath('exTable.csv')
     csvGzFile = csvRoot.joinpath('exTable.csv.gz')
-    '''
+
     try:
-        identifierList = pd.read_csv(csvGzFile)
+        identifierList = pd.read_csv(csvGzFile).fillna("")
         identifierList['expanded'] = identifierList['expanded'].map(
             lambda x: literal_eval(x)
         )
     except:
-        identifierList = pd.read_csv(csvFile)
+        identifierList = pd.read_csv(csvFile).fillna("")
         identifierList['expanded'] = identifierList['expanded'].map(lambda x: str(x).split(';'))
         identifierList['heuristic'] = identifierList['heuristic'].map(lambda x: str(x).split(';'))
     '''
     try:
-        identifierList = pd.read_csv(csvFile).fillna("")
-        identifierList['expanded'] = identifierList['expanded'].map(lambda x: str(x).split(';'))
-        identifierList['heuristic'] = identifierList['heuristic'].map(lambda x: str(x).split(';'))
+        identifierList = pd.read_csv(csvGzFile).fillna("")
+        #/identifierList['expanded'] = identifierList['expanded'].map(lambda x: str(x).split(';'))
+        #/identifierList['heuristic'] = identifierList['heuristic'].map(lambda x: str(x).split(';'))
     except:
         print("error")
         exit(1)
+    '''
     expanded = identifierList['expanded'].values
     posTagRows = []
     NormalizedRows = []
@@ -72,14 +73,16 @@ if __name__ == '__main__':
     identifierList['postag'] = pd.Series(posTagRows)
     identifierList['normalized'] = pd.Series(NormalizedRows)
 
+
     #add relation parameter to parameter
     parameterOverload = []
-    for i, idData in identifierList.iterrows():
-        para = idData["typeOfIdentifier"]
+    idDatas = identifierList[["typeOfIdentifier", "enclosingMethod"]].values
+    for idData in idDatas:
+        para = idData[0]
         if para != "ParameterName":
             parameterOverload.append("")
             continue
-        methodIds = [id.rsplit(':', 1)[0] for id in idData["enclosingMethod"].split(' - ')]
+        methodIds = [id.rsplit(':', 1)[0] for id in idData[1].split(' - ')]
         methods = identifierList[identifierList['id'].isin(methodIds)]
         #print(methods)
         if len(methods) != 1:

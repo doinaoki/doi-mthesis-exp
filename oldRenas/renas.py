@@ -98,7 +98,7 @@ def coRenameRelation(tableData, triggerData, triggerRename):
     nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
     result = []
     hops = 0
-    _logger.debug(f'next ids: {nextIds}')
+    #_logger.debug(f'next ids: {nextIds}')
     while len(nextIds) > 0:
         triedIds.update(nextIds)
         hops += 1
@@ -116,7 +116,7 @@ def coRenameRelation(tableData, triggerData, triggerRename):
                 result.append(recommended)
                 nextIds.update(getRelatedIds(candidate[_RELATION_LIST].dropna()))
         nextIds = nextIds - triedIds
-        _logger.debug(f'next ids: {nextIds}')
+        #_logger.debug(f'next ids: {nextIds}')
     return result
 
 

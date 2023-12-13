@@ -43,7 +43,8 @@ RANK = 20
 RANK_DISTANSE_PENALTY = 1
 RANK_WORD_PENALTY = 4
 RANK_FILE_PENALTY = 1
-UPPER = 1000
+UPPER = 10000
+UPPER_RANKING = 20
 
 IS_ALL_RECOMMEND = True
 IS_NORMALIZE_RECOMMEND = False
@@ -303,8 +304,8 @@ def coRenameRelation(tableData, triggerData, triggerRename):
     while len(nextIds) > 0:
         #調べるidを取得する 0.34  190779
         score, hop, searchId = heapq.heappop(nextIds)
-        if trueRecommendScore < score:
-            continue
+        if trueRecommendScore < score and trueRecommend >= UPPER_RANKING :
+            break
         #print(score, searchId)
         #0.0002   change  0.006   10894
         if searchId in triedIds:
@@ -317,7 +318,7 @@ def coRenameRelation(tableData, triggerData, triggerRename):
         #推薦実施
         #0.00005  0.623  10894
         nextScore = score
-        searchDataCopy = deepcopy(searchData.to_dict())
+        searchDataCopy = deepcopy(searchData)
 
         #print(searchDataCopy["name"])  0.711  10894
         #0.00006
@@ -325,43 +326,51 @@ def coRenameRelation(tableData, triggerData, triggerRename):
             recommended = triggerRename.coRename(searchDataCopy)
             if recommended is not None:
                 nextScore = nextScore + recommended["similarity"]
-                if nextScore <= trueRecommendScore:
+                if nextScore <= trueRecommendScore or trueRecommend < UPPER_RANKING:
                     recommended['rank'] = nextScore
                     recommended['hop'] = hop
                     result.append(recommended)
                     trueRecommend += 1
-                    if trueRecommend == UPPER:
-                        trueRecommendScore = nextScore
             else:
                 nextScore += RANK_WORD_PENALTY
 
-        if nextScore >= trueRecommendScore:
-            continue
+        if nextScore >= trueRecommendScore and trueRecommend >= UPPER_RANKING :
+            break
         #次に調べるべきidを格納 0.0007  change  14.90  6040
-        candidateIds, idCost = getRelatedIdsAndCost(searchData[_RELATION_LIST].dropna())
+        #candidateIds, idCost = getRelatedIdsAndCost(searchData[_RELATION_LIST].dropna())
+        candidateIds, idCost = getRelatedIdsAndCostTemp(searchData)
         candidateIds = candidateIds - triedIds
         #0.003  change
-        candidateData = tableData.selectDataByIds(candidateIds)[["id","files"]].values
+        candidateData = tableData.selectDataByIds(candidateIds)
         candidateLen = len(candidateData)
         #0.04  0.147   上0:25,  下 0:01
         for ci in range(candidateLen):
             #0.0001  change  6040
             candidate = candidateData[ci]
-            distanceCost = idCost[candidate[0]]
-            if candidate[1] != searchDataCopy["files"]:
-                if nextScore + RANK_FILE_PENALTY + distanceCost <= trueRecommendScore:
-                    heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY + distanceCost, hop+1, candidate[0]])
+            distanceCost = idCost[candidate['id']]
+            if candidate['files'] != searchDataCopy["files"]:
+                if nextScore + RANK_FILE_PENALTY + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
+                    heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY + distanceCost, hop+1, candidate['id']])
             else:
-                if nextScore + distanceCost <= trueRecommendScore:
-                    heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate[0]])
+                if nextScore + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
+                    heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate['id']])
 
-    print(trueRecommendScore)
-    print(len(triedIds))
+    print(f'triedID = {len(triedIds)}')
+    print(f'debug: nextIDs = {len(nextIds)}')
+    print(f'debug: countRecommend = {trueRecommend}')
     return result
 
 
-def relationCost(relation):
-    pass
+def getRelatedIdsAndCostTemp(relationSeries):
+    relatedIds = set()
+    idToCost = {}
+    for i, ids in relationSeries.items():
+        if ids == "" or i not in _RELATION_LIST:
+            continue
+        idList = {id.rsplit(':', 1)[0] for id in ids.split(' - ')}
+        relatedIds.update(idList)
+        idToCost.update([(id, _RELATION_COST[i]) for id in idList])
+    return relatedIds, idToCost
 
 
 def recommend(repo, force):

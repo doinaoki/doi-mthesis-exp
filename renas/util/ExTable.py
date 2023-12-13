@@ -25,7 +25,8 @@ class ExTable:
         tableData['delimiter'] = tableData['delimiter'].map(lambda x: str(x).split(';'))
         tableData['pattern'] = tableData['pattern'].map(lambda x: x if isinstance(x, list) else [x] if not pd.isna(x) else [])
         tableData['case'] = tableData['case'].map(lambda x: str(x).split(';'))
-        self.__tableDict = tableData.set_index('id', drop=False).to_dict(orient='index')
+        self.__tableDict = tableData.set_index('id', drop=False).fillna("").to_dict(orient='index')
+        self.__tableIds = set(tableData['id'].values.tolist())
         _logger.debug(f'successfully read')
         return tableData
 
@@ -53,16 +54,23 @@ class ExTable:
             _logger.warning(f'Cannot Identify DevRename {renameRow["oldname"]}\n')
             _logger.warning(f'\n{result}')
         return result.iloc[0]
-    
+    '''    
     def selectDataByIds(self, ids):
         return self.__table[self.__table['id'].isin(ids)]
-
+    '''
+    def selectDataByIds(self, ids):
+        data = []
+        for id in ids:
+            if id in self.__tableDict:
+                data.append(self.__tableDict[id])
+        return data
+    
     def selectDataByColumns(self, columns):
         return self.__table[columns]
 
     def selectAllData(self):
         return self.__table
-
+    '''
     def selectDataById(self, id):
         data = self.__table[self.__table['id'] == id]
         if len(data) != 1:
@@ -73,4 +81,3 @@ class ExTable:
     def selectDataById(self, id):
         data = self.__tableDict[id]
         return data
-    '''

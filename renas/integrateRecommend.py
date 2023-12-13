@@ -42,6 +42,7 @@ numberToCommit = {}
 dateToCommit = {}
 commitToNumber = {}
 commitToDate = {}
+motivationExample = {"Normalize":{}, "All":{}, "Relation":{}, "None":{}}
 
 RANK = 20
 rankTrueRecommend = [[0, 0] for _ in range(RANK)]
@@ -197,9 +198,10 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                     continue
                 rKeys.append(getKey(rDic))
                 renames.append(rDic)
-        if opIds == "All" or opIds == "Normalize":
+        if opIds == "All":
             triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))
-
+        if opIds == "Normalize":
+            triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))
         if len(renames) < 1:
             #print(triggerOp)
             print("one rename is conducted")
@@ -238,7 +240,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         allRecall[opIds].append(recall)
         allFscore[opIds].append(fscore)
         #addRankRecommend(triggerRec, opIds)
-        if opIds == "All":
+        if opIds == "All" or opIds == "Normalize":
             setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
             setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
         print(f"operation chunk = {triggerOp}")
@@ -246,6 +248,8 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                exact = {exacts}, fscore = {fscore} ")
         _showRQFigure.update(trigger, triggerRec, renames, trueRecommendIndex, opIds)
     
+    if opIds in motivationExample:
+        motivationExample[opIds][commit] = allTrueRec
     detail_info.append([commit, "allRenames", allRenames, "allRecommend", allRecommend,
                         "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend if allRecommend != 0 else 0,
                          "recall", allTrueRec/allRenames if allRenames != 0 else 0])
@@ -565,6 +569,7 @@ if __name__ ==  "__main__":
     detailCSV = os.path.join(args.source,'integrateDetail.csv')  ##
     resultCSV = os.path.join(args.source,'integrateResult.csv') 
     missCSV = os.path.join(args.source,'missOperation.csv') 
+    mecCSV = os.path.join(args.source,'motivationExampleCandidate.csv') 
     allCSV = os.path.join(args.source,'all.csv') 
 
     #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
@@ -635,5 +640,20 @@ if __name__ ==  "__main__":
                 w.writerow([i])
                 w.writerow([0])
         #w.writerow(rankTrueRecommend)
+    with open(mecCSV, 'w') as dCSV:
+        w = csv.writer(dCSV)
+        normDic = motivationExample["Normalize"]
+        allDic = motivationExample["All"]
+        relDic = motivationExample["Relation"]
+        noneDic = motivationExample["None"]
+        maxDic = ""
+        maxNum = 0
+        for c in normDic.keys():
+            if normDic[c] < allDic[c] and relDic[c] < allDic[c]:
+                w.writerow([c])
+            if maxNum < allDic[c] - normDic[c] :
+                maxNum = allDic[c] - normDic[c]
+                maxDic = c
+        print(maxDic, maxNum)
         
 

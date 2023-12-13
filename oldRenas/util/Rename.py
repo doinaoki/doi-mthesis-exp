@@ -229,7 +229,7 @@ class Rename:
         self.__replaceSlice(oldDict['delimiter'], replIdx, replIdx, newDelim)
         if self.__normalize:
             # postag
-            newPostag = [oldDict['postag'][contextIdx]] * insertedWordLen
+            newPostag = ["NN"] * insertedWordLen
             self.__replaceSlice(oldDict['postag'], replIdx, replIdx, newPostag)
             # heuristic
             newHeuristic = [oldDict['heuristic'][contextIdx]] * insertedWordLen

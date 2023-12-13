@@ -10,6 +10,7 @@ import subprocess
 import argparse
 from multiprocessing import Pool
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG, log
+import re
 
 import pandas as pd
 from .util.Name import KgExpanderSplitter
@@ -19,6 +20,8 @@ LOGGER = getLogger(__name__)
 ENGLISH_DIC = []
 WORD_CACHE = {}
 # SPLITTER = KgExpanderSplitter()
+gitRe = re.compile(r'(?:^commit)\s+(.+)\nAuthor:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
+COMMIT = set()
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -26,6 +29,16 @@ def setArgument():
     parser.add_argument('-D', help='dry run (only check how many archives will be created)', action='store_true', default=False)
     args = parser.parse_args()
     return args
+
+def setGitlog(path):
+    repoPath = os.path.join(path, "repo")
+    cp = subprocess.run(f"cd {repoPath}; git log",shell=True, stdout=subprocess.PIPE)
+    gitLog = cp.stdout.decode('utf-8','ignore')
+    gitInfo = gitRe.findall(gitLog)
+    for info in gitInfo:
+        commit = info[0]
+        COMMIT.add(commit)
+    return
 
 def setLogger(level):
     LOGGER.setLevel(level)
@@ -94,6 +107,7 @@ if __name__ == "__main__":
     root = pathlib.Path(args.source)
 
     LOGGER.info(f'git archive {root}')
+    setGitlog(root)
     jsonPath = root.joinpath('rename.json')
     if not os.path.isfile(jsonPath) or not os.path.exists(root.joinpath('repo')):
         LOGGER.error(f'repo does not exist')
@@ -109,7 +123,7 @@ if __name__ == "__main__":
         abbrCommits += len(commits)
 
         outDir = root.joinpath('archives')
-        gitArchiveArgs = [(root, outDir, c) for c in commits]
+        gitArchiveArgs = [(root, outDir, c) for c in commits if c in COMMIT]
         if args.D:
             LOGGER.info('dry run')
         else:
