@@ -60,6 +60,9 @@ if [ "$FORCE" = "TRUE" ] || [ ! -f "${GZIP_EXTABLE_PATH}" ]; then
     echo "gzip tables"
     gzip -f "${archive}/${IDTABLE}"
     gzip -f "${archive}/${EXTABLE}"
+
+    rm -rf "${repo}"
+
 else
     echo "${IDTABLE_PATH} already exists. Skip."
 fi

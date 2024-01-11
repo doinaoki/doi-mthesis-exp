@@ -22,9 +22,9 @@ _RELATION_LIST = [
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 _RELATION_COST = {
     "subclass": 3.0,
-    "subsubclass": 3.0,
+    "subsubclass": 4.0,
     "parents": 3.0,
-    "ancestor": 3.0,
+    "ancestor": 4.0,
     "methods": 4.0,
     "fields": 4.0,
     "siblings": 1.0,
@@ -39,6 +39,7 @@ _RELATION_COST = {
     "argument": 2.0, 
     "parameterOverload": 1.0
 }
+ratio = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
 RANK = 50
 RANK_DISTANSE_PENALTY = 1
 RANK_WORD_PENALTY = 4
@@ -46,7 +47,7 @@ RANK_FILE_PENALTY = 1
 UPPER = 10000
 UPPER_RANKING = 20
 RELATION_TIMES = 1
-SIMILARITY_TIMES = 10
+SIMILARITY_TIMES = 1
 
 IS_ALL_RECOMMEND = True
 IS_RELATION_RECOMMEND = False
@@ -136,13 +137,6 @@ def doCoRename(commit, tableData, trigger, relation, similarity, all):
     triggerRename.setNewName(trigger['newname'])
     recordOperation(commit, triggerRename.getOp(), similarity, all)
     return coRenameRelation(tableData, triggerData, triggerRename, relation, similarity)
-    '''
-    else:
-        triggerDataDictCopy = deepcopy(triggerData[_IDENTIFIER_LIST].to_dict())
-        triggerRename = Rename(triggerDataDictCopy, normalize=normalize)
-        triggerRename.setNewName(trigger['newname'])
-        return coRenameNone(tableData, triggerRename)
-    '''
 
 
 def coRenameNone(tableData, triggerRename):
@@ -151,178 +145,28 @@ def coRenameNone(tableData, triggerRename):
     result = [r for r in recommends if r is not None]
     return result
 
-'''
-# 他のRenameも推薦できるか見る
-def coRenameRelation(tableData, triggerData, triggerRename):
-    triedIds = {triggerData['id']}
-    nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
-    result = []
-    hops = 0
-    _logger.debug(f'next ids: {nextIds}')
-    while len(nextIds) > 0:
-        triedIds.update(nextIds)
-        hops += 1
-        _logger.debug(f'{hops} hop distance')
-        relatedData = tableData.selectDataByIds(nextIds)
-        _logger.debug(f'candidate Ids: {relatedData["id"].to_list()}')
-        relatedDataLen = len(relatedData)
-        for rIdx in range(relatedDataLen):
-            candidate = relatedData.iloc[rIdx]
-            candidateCopy = deepcopy(candidate.to_dict())
-            recommended = triggerRename.coRename(candidateCopy)
-            if recommended is not None:
-                _logger.debug(f'{candidate["name"]} should be renamed to {recommended["join"]}')
-                recommended['hop'] = hops
-                recommended['rank'] = 1
-                result.append(recommended)
-                nextIds.update(getRelatedIds(candidate[_RELATION_LIST].dropna()))
-        nextIds = nextIds - triedIds
-        _logger.debug(f'next ids: {nextIds}')
-    return result
-'''
-
-'''
-def coRenameRelation(tableData, triggerData, triggerRename):
-    triedIds = {triggerData['id']}
-    nextIds = getRelatedIds(triggerData[_RELATION_LIST].dropna())
-    idsToRank = {id : [0, triggerData["files"]] for id in nextIds}
-    result = []
-    hops = 0
-    _logger.debug(f'next ids: {nextIds}')
-    while len(nextIds) > 0:
-        triedIds.update(nextIds)
-        hops += 1
-        _logger.debug(f'{hops} hop distance')
-        relatedData = tableData.selectDataByIds(nextIds)
-        _logger.debug(f'candidate Ids: {relatedData["id"].to_list()}')
-        relatedDataLen = len(relatedData)
-        for rIdx in range(relatedDataLen):
-            candidate = relatedData.iloc[rIdx]
-            candidateCopy = deepcopy(candidate.to_dict())
-            candidateRank = idsToRank[candidate["id"]][0]
-            previewFile = idsToRank[candidate["id"]][1]
-            recommended = triggerRename.coRename(candidateCopy)
-            if recommended is not None:
-                _logger.debug(f'{candidate["name"]} should be renamed to {recommended["join"]}')
-                newRank = candidateRank + RANK_DISTANSE_PENALTY
-                if previewFile != candidate["files"]:
-                    newRank += RANK_FILE_PENALTY
-                if newRank > RANK:
-                    continue
-                recommended['hop'] = hops
-                recommended['rank'] = newRank
-                newIds = getRelatedIds(candidate[_RELATION_LIST].dropna())
-                result.append(recommended)
-                idsToRank.update({id: [newRank, candidate["files"]] for id in newIds})
-                nextIds.update(newIds)
-            else:
-                newIds = getRelatedIds(candidate[_RELATION_LIST].dropna())
-                newRank = candidateRank + RANK_DISTANSE_PENALTY + RANK_WORD_PENALTY
-                if previewFile != candidate["files"]:
-                    newRank += RANK_FILE_PENALTY
-                if newRank > RANK:
-                    continue
-                idsToRank.update({id: [newRank, candidate["files"]] for id in newIds})
-                nextIds.update(newIds)
-
-        nextIds = nextIds - triedIds
-        _logger.debug(f'next ids: {nextIds}')
-    return result
-'''
-'''
-def coRenameRelation(tableData, triggerData, triggerRename):
-    triedIds = set()
-    triggerScore = 0
-    nextIds = []
-    heapq.heappush(nextIds, [triggerScore, triggerData["id"]])  
-    result = []
-    _logger.debug(f'next ids: {nextIds}')
-    trueRecommend = 0
-    trueRecommendScore = RANK
-    while len(nextIds) > 0:
-        #調べるidを取得する
-        score ,searchId = heapq.heappop(nextIds)
-        if trueRecommendScore < score:
-            continue
-        #この処理がだいぶ重い0.003   change
-        searchData = tableData.selectDataById(searchId)
-        #print(score, searchId)
-        #0.0002   change
-        if searchId in triedIds:
-            continue
-        triedIds.add(searchId)
-
-        #推薦実施
-        #0.00005
-        searchDataCopy = deepcopy(searchData.to_dict())
-        #print(searchDataCopy["name"])
-        #0.00006
-        nextScore = score + RANK_DISTANSE_PENALTY
-        if searchDataCopy['id'] != triggerData['id']:
-            recommended = triggerRename.coRename(searchDataCopy)
-            if recommended is not None:
-                recommended['rank'] = score
-                result.append(recommended)
-                trueRecommend += 1
-                if trueRecommend == UPPER:
-                    trueRecommendScore = score
-            else:
-                nextScore += RANK_WORD_PENALTY
-
-
-        #次に調べるべきidを格納 0.0007  change
-        candidateIds = getRelatedIds(searchData[_RELATION_LIST].dropna())
-        #0.003  change
-        candidateData = tableData.selectDataByIds(candidateIds)
-        candidateLen = len(candidateData)
-        #0.04
-        for ci in range(candidateLen):
-            #0.0001  change
-            candidate = candidateData.iloc[ci].to_dict()
-            if candidate["id"] in triedIds:
-                continue
-            if candidate["files"] != searchDataCopy["files"]:
-                if nextScore + RANK_FILE_PENALTY <= trueRecommendScore:
-                    heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY, candidate["id"]])
-            else:
-                if nextScore <= trueRecommendScore:
-                    heapq.heappush(nextIds, [nextScore, candidate["id"]])
-        _logger.debug(f'next ids: {nextIds}')
-
-    print(trueRecommendScore)
-    print(len(triedIds))
-    return result
-'''
 
 def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimilarity):
     triedIds = set()
     triggerScore = 0
     startHop = 0
     nextIds = []
-    heapq.heappush(nextIds, [triggerScore, startHop, triggerData["id"], ""])  
+    heapq.heappush(nextIds, [triggerScore, startHop, triggerData["id"]])  
     result = []
     trueRecommend = 0
     trueRecommendScore = RANK
     isNotAll = True
     if isRelation and isSimilarity:
         isNotAll = False
-    if "ancestorResources" not in triggerData["id"]:
-        return
-    pathDict = {}
     # 4:30
     while len(nextIds) > 0:
         #調べるidを取得する 0.34  190779
-        score, hop, searchId, a = heapq.heappop(nextIds)
-
-        if ((trueRecommendScore < score or isNotAll) and trueRecommend >= UPPER_RANKING) and isRelation :
-            break
+        score, hop, searchId = heapq.heappop(nextIds)
         #print(score, searchId)
         #0.0002   change  0.006   10894
         if searchId in triedIds:
             continue
         triedIds.add(searchId)
-
-        pathDict[searchId] = a
 
 
         #この処理がだいぶ重い0.003  18.85  10894
@@ -349,8 +193,6 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
 #            else:
 #                nextScore += RANK_WORD_PENALTY
 
-        if ((nextScore > trueRecommendScore or isNotAll) and trueRecommend >= UPPER_RANKING) and isRelation :
-            break
         #次に調べるべきidを格納 0.0007  change  14.90  6040
         #candidateIds, idCost = getRelatedIdsAndCost(searchData[_RELATION_LIST].dropna())
         candidateIds, idCost = getRelatedIdsAndCostTemp(searchData)
@@ -363,15 +205,14 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
             #0.0001  change  6040
             candidate = candidateData[ci]
             distanceCost = idCost[candidate['id']] * RELATION_TIMES if isRelation else 0
-
             #if candidate['files'] != searchDataCopy["files"]:
             #    if nextScore + RANK_FILE_PENALTY + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
             #        heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY + distanceCost, hop+1, candidate['id']])
             #else:
             if nextScore + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
-                heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate['id'], searchData['id']])
+                heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate['id']])
 
-    print(pathDict["Lorg/restlet/ext/jaxrs/internal/core/CallContext;"])
+
     print(f'triedID = {len(triedIds)}')
     print(f'debug: nextIDs = {len(nextIds)}')
     print(f'debug: countRecommend = {trueRecommend}')
@@ -409,16 +250,14 @@ def recommend(repo, force):
     resultSimilarity = {}
     resultRelation = {}
     resultAllNormalize = {}
-    outputNone = root.joinpath('recommend_none.json')
-    outputSimilarity = root.joinpath('recommend_similarity_ranking.json')
-    outputRelation = root.joinpath('recommend_relation_ranking.json')
-    outputAllNormalize = root.joinpath('recommend_all_normalize.json')
+    outputSimilarity = root.joinpath('recommend_similarity_ranking_random.json')
+    outputRelation = root.joinpath('recommend_relation_ranking_random.json')
+    outputAllNormalize = root.joinpath(f'recommend_all_normalize_random.json')
     outputOperation = root.joinpath('operations.json')
 
     #既に作られている場合終了
     if not force and \
-        (os.path.exists(outputNone) \
-        or os.path.exists(outputSimilarity) \
+        (os.path.exists(outputSimilarity) \
         or os.path.exists(outputRelation)):
         _logger.info(f'{root} already recommended')
         return
@@ -453,6 +292,8 @@ def recommend(repo, force):
         size = goldSet.shape[0]
         for gIdx in range(size):
             trigger = goldSet.iloc[gIdx]
+            tData = tableData.selectDataByRow(trigger)
+            resultAllNormalize[commit]['goldset'][gIdx]["normalized"] = (tData.to_dict())["normalized"] if tData is not None else []
             _logger.debug(f'trigger: {printDict(trigger.to_dict(), "description")}')
             commitStartTime = time.time()
             # all
@@ -492,5 +333,6 @@ def recommend(repo, force):
 if __name__ == '__main__':
     mainArgs = setArgument()
     rootLogger = setLogger(DEBUG if mainArgs.d else INFO)
+
     for repo in mainArgs.source:
         recommend(repo, mainArgs.force)

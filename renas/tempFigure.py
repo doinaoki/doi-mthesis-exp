@@ -25,16 +25,6 @@ import statistics
 
 _logger = getLogger(__name__)
 
-researchFileNames = {
-                    "recommend_none.json": "None",
-                    "recommend_relation_normalize.json": "Normalize",
-                    "recommend_relation.json": "Relation",
-                    "recommend_all_normalize.json": "All"}
-
-operations = ["insert", "delete", "replace", "order", "format"]
-typeOfIdentifiers = ["ParameterName", "VariableName", "MethodName", "FieldName", "ClassName"]
-UPPER_HOP = 100
-
 def setArgument():
     parser = argparse.ArgumentParser()
     parser.add_argument('source', help='set directory containing repositories to be analyzed')
@@ -42,20 +32,28 @@ def setArgument():
     args = parser.parse_args()
     return args
 
-AllRecommend = np.array([0.554985522,0.717062248,0.22431039707914202,0.5121484299818748,0.6504328645254336])
-NormalizeRecommend = np.array([0.348337388378699, 0.563983442322067, 0.16727088162887785, 0.3311912853054191, 0.389316068065239])
+similarityRecommend = np.array([0.484487986,0.625223649,0.17763514134615685,0.45577113202362024,0.620759483641038])
+relationRecommend = np.array([0.519168647, 0.692355771, 0.20848483890952374, 0.48251721643393886, 0.6101030927341484])
+allRecommend = np.array([0.536724229, 0.714280916, 0.21908170720380346, 0.4985627557210174, 0.6319131091941322])
 args = setArgument()
 fig, ax = plt.subplots()
 bar_width = 0.25
 alpha = 0.8
 index = np.array([i+1 for i in range(5)])
-plt.bar(index, AllRecommend, bar_width,
+
+gpoint = np.arange(0, 0.8, 0.1)
+plt.hlines(gpoint, 0.8, 6, linewidth=0.1, colors='gray')
+
+plt.bar(index, similarityRecommend, bar_width,
 alpha=alpha,color='green')
 
-plt.bar(index + bar_width, NormalizeRecommend, bar_width,
+plt.bar(index + bar_width, relationRecommend, bar_width,
 alpha=alpha,color='pink')
 
+plt.bar(index + bar_width*2, allRecommend, bar_width,
+alpha=alpha,color='gold')
+
 plt.ylabel('ratio')
-plt.xticks(index + bar_width/2, ["MAP", "MRR", "top1", "top5", "top10"])
-plt.legend()
+plt.xticks(index + bar_width, ["MAP", "MRR", "top1", "top5", "top10"])
+
 plt.savefig(os.path.join(args.source, "figure", "showRQ.png"), pad_inches = 0)

@@ -12,6 +12,7 @@ import argparse
 from multiprocessing import Pool
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG, log
 import operator
+from copy import deepcopy
 
 from .util.ExTable import ExTable
 from datetime import datetime, date, timedelta
@@ -19,15 +20,11 @@ import pandas as pd
 from .util.Name import KgExpanderSplitter
 from .util.Rename import Rename
 import statistics
-from .showRQFigure import showRQFigure
+from .showRandomFigure import showRandomFigure
 
 _logger = getLogger(__name__)
-
-researchFileNames = {
-                    "recommend_none.json": "None",
-                    "recommend_relation_normalize.json": "Normalize",
-                    "recommend_relation.json": "Relation",
-                    "recommend_all_normalize.json": "All"}
+ratio = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25]
+researchFileNames = {f"{i}": f"All{i}" for i in ratio}
 detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewname', 'op',
                 'commitPool', 'researchCommit', 'file', 'line', 'oldname' ,'truename', 'recommendname']]
 
@@ -35,9 +32,9 @@ result_info = []
 allPrecision = {op: [] for op in researchFileNames.values()}
 allRecall = {op: [] for op in researchFileNames.values()}
 allFscore = {op: [] for op in researchFileNames.values()}
-TOPN = 40
-RANK = 50
-rankTrueRecommend = [[0, 0] for _ in range(RANK)]
+TOPN = 20
+COST = 50
+rankTrueRecommend = [[0, 0] for _ in range(COST)]
 
 gitRe = re.compile(r'(?:^commit)\s+(.+)\nAuthor:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
 numberToCommit = {}
@@ -46,9 +43,8 @@ commitToNumber = {}
 commitToDate = {}
 motivationExample = {"Normalize":{}, "All":{}, "Relation":{}, "None":{}}
 
-
 missOperation = {op: {"insert": [0, 0, 0], "delete": [0, 0, 0], "replace": [0, 0, 0], "order": [0, 0, 0], "format": [0, 0, 0], "changeCase": [0, 0, 0], "changePattern": [0, 0, 0]} for op in researchFileNames.values()}
-_showRQFigure = showRQFigure(TOPN, RANK)
+_showRandomFigure = showRandomFigure(TOPN, COST)
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -78,7 +74,6 @@ def setGitlog(path):
     num = len(gitInfo)-1
     for info in gitInfo:
         commit = info[0]
-        author = info[1]
         dateInfo = datetime.strptime(info[2], '%a %b %d %H:%M:%S %Y %z')
         commitToDate[commit] = dateInfo
         dateToCommit[dateInfo]= commit
@@ -122,14 +117,6 @@ def getCommitsInfo(commit):
     #複数コミットの取り方
     #dateが+2のコミットを含むようにする(仮)根拠なし
     researchCommits = []
-    '''
-    num = 2
-    fromCommitDate = commitToDate[commit]
-    toCommitDate = commitToDate[commit] + timedelta(days=num)
-    for date, info in dateToCommit.items():
-        if fromCommitDate <= date < toCommitDate:
-            researchCommits.append(dateToCommit[date])
-    '''
     researchCommits.append(commit)
     return researchCommits
 
@@ -147,7 +134,7 @@ def checkMeaningful(operations):
     print(operations)
     return True
 
-def recommendCommit(commit, tableData, operations, recommendName, renameInfo, opIds):
+def recommendCommit(commit, tableData, operations, recommendName, renameInfo, opIds, ra):
     #調査体操となる複数コミットを取得
     researchCommits = getCommitsInfo(commit)
     opGroup = {}
@@ -171,6 +158,12 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                     opGroup[str(op)] = []
                 opGroup[str(op)].append(rDic)
     
+    #同時名前変更集合数
+    setCount = 0
+    for i in opGroup.values():
+        if len(i) >= 2:
+            setCount += 1
+    
     allRenames = 0
     allRecommend = 0
     allTrueRec = 0
@@ -183,7 +176,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
             print(f"something wrong {triggerKey}")
             continue
         triggerOp = operations[commit][triggerKey]
-        triggerRec = recommendName[triggerKey]
+        triggerRecommend = recommendName[triggerKey]
         if checkMeaningful(triggerOp):
             continue
         renames = []
@@ -198,10 +191,12 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                     continue
                 rKeys.append(getKey(rDic))
                 renames.append(rDic)
-        if opIds == "All":
-            triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))
-        if opIds == "Normalize":
-            triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))
+
+        triggerRec = deepcopy(triggerRecommend)
+        for tr in triggerRec:
+            tr["rank"] = tr["rank"] + tr["similarity"] * (ra - 1)
+            #print(tr["rank"], tr["similarity"], ra)
+        triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'id'))
         if len(renames) < 1:
             #print(triggerOp)
             print("one rename is conducted")
@@ -240,13 +235,12 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         allRecall[opIds].append(recall)
         allFscore[opIds].append(fscore)
         #addRankRecommend(triggerRec, opIds)
-        if opIds == "All" or opIds == "Normalize":
-            setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
-            setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
+        setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
+        setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
         print(f"operation chunk = {triggerOp}")
         print(f"precision = {precision},  recall = {recall},\
                exact = {exacts}, fscore = {fscore} ")
-        _showRQFigure.update(trigger, triggerRec, renames, trueRecommendIndex, opIds)
+        _showRandomFigure.update(trigger, triggerRec, renames, trueRecommendIndex, opIds)
     
     if opIds in motivationExample:
         motivationExample[opIds][commit] = allTrueRec
@@ -256,7 +250,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
     result_info.append([commit, "allRenames", allRenames, "allRecommend", allRecommend,
                         "allTrueRecommend", allTrueRec, "precision", allTrueRec/allRecommend if allRecommend != 0 else 0,
                          "recall", allTrueRec/allRenames if allRenames != 0 else 0])
-    return allRenames, allRecommend, allTrueRec
+    return allRenames, allRecommend, allTrueRec, setCount
 
 def setMissOperation(opId, setOp, reNum, trigNum, trueNum):
 
@@ -289,16 +283,6 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, op):
                 trueRecommendIndex.append([i, k])
                 flag = True
                 break
-        '''
-        if op != "None":
-            if flag:
-                continue
-            ri = canRecommendation(r, triggerRec, tableData)
-            if ri == None:
-                continue
-            trueRecommendIndex.append([i, ri])
-        '''
-        #print(i, ri)
 
     for t in trueRecommendIndex:
         detail = [commit, trigger["files"], trigger["line"], trigger["typeOfIdentifier"], trigger["oldname"], trigger["newname"],
@@ -328,47 +312,6 @@ def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, op):
                 triggerRec[t]["typeOfIdentifier"],triggerRec[t]["name"], "NaN", triggerRec[t]["join"] , triggerRec[t]["rank"]]
             detail_info.append(detail)
 
-'''
-def setDetail(commit, trigger, triggerOp, triggerRec, renames):
-    commitPool = []
-    for r in renames:
-        if r["commit"] not in commitPool:
-            commitPool.append(r["commit"])
-
-    rIdentifier = []
-    recIdentifier = []
-    for r in renames:
-        rIdentifier.append(str([r["line"], r["typeOfIdentifier"], r["oldname"], r["files"]]))
-
-    for r in triggerRec:
-        recIdentifier.append(str([r["line"], r["typeOfIdentifier"], r["name"], r["files"]]))
-    
-    trueRecommend = list(set(rIdentifier) & set(recIdentifier))
-    trueRecommendIndex = [(rIdentifier.index(t), recIdentifier.index(t)) for t in trueRecommend]
-    falseNegativeRecommend = list(set(rIdentifier) - set(recIdentifier))
-    falseNegativeIndex = [rIdentifier.index(t) for t in falseNegativeRecommend]
-    trueNegativeRecommend = list(set(recIdentifier) - set(rIdentifier))
-    trueNegativeIndex = [recIdentifier.index(t) for t in trueNegativeRecommend]
-
-    for t in trueRecommendIndex:
-        detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
-                    str(triggerOp), commitPool, renames[t[0]]["commit"], renames[t[0]]["files"], str(renames[t[0]]["line"]), 
-                    renames[t[0]]["oldname"], renames[t[0]]["newname"], triggerRec[t[1]]["join"]]
-        detail_info.append(detail)
-
-    for t in falseNegativeIndex:
-        detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
-            str(triggerOp), commitPool, renames[t]["commit"], renames[t]["files"], str(renames[t]["line"]), 
-            renames[t]["oldname"], renames[t]["newname"], "NaN"]
-        detail_info.append(detail)
-
-    for t in trueNegativeIndex:
-        detail = [commit, trigger["files"], trigger["line"], trigger["oldname"], trigger["newname"],
-            str(triggerOp), commitPool, commit, triggerRec[t]["files"], str(triggerRec[t]["line"]), 
-            triggerRec[t]["name"], "NaN", triggerRec[t]["join"]]
-        detail_info.append(detail)
-'''
-
 def calcFScore(precision, recall):
     if precision == 0 or recall == 0:
         return 0
@@ -392,118 +335,6 @@ def getRelationData(renameData, relation):
         return []
     return renameData[relation].split(" - ")
 
-def canRecommendation(rename, recommendation, tableData):
-    renameData = tableData.selectDataByRow(rename)
-    if renameData is None:
-        return None
-    typeOfIdentifier = rename["typeOfIdentifier"]
-    oldName = rename["oldname"]
-    enclosingClass = renameData["enclosingCLass"]
-    fileName = rename["files"]
-    if typeOfIdentifier == "ClassName":
-        methods = getRelationData(renameData,"methods")
-        for i in range(len(recommendation)):
-            rec = recommendation[i]
-            if rec["typeOfIdentifier"] != typeOfIdentifier:
-                continue
-            if oldName != rec["name"]:
-                continue
-            if fileName != rec["files"]:
-                continue
-            recMethods = getRelationData(rec,"methods")
-            for method in methods:
-                if method == "":
-                    continue
-                if method in recMethods:
-                    return i
-        return None
-
-    elif typeOfIdentifier == "MethodName":
-        siblings = getRelationData(renameData,"siblings")
-        for i in range(len(recommendation)):
-            rec = recommendation[i]
-            if oldName != rec["name"]:
-                continue
-            if rec["typeOfIdentifier"] != typeOfIdentifier:
-                continue
-            if enclosingClass != rec["enclosingCLass"]:
-                continue
-            return i
-        for i in range(len(recommendation)):
-            rec = recommendation[i]
-            if rec["typeOfIdentifier"] != typeOfIdentifier:
-                continue
-            if oldName != rec["name"]:
-                continue
-            recMethods = getRelationData(rec, "siblings")
-            for method in siblings:
-                if method == "":
-                    continue
-                if method in recMethods:
-                    return i
-        return None
-    
-    elif typeOfIdentifier == "FieldName":
-        siblings = getRelationData(renameData ,"siblings")
-        for i in range(len(recommendation)):
-            rec = recommendation[i]
-            if rec["typeOfIdentifier"] != typeOfIdentifier:
-                continue
-            if oldName != rec["name"]:
-                continue
-            if enclosingClass != rec["enclosingCLass"]:
-                continue
-            return i
-        for i in range(len(recommendation)):
-            rec = recommendation[i]
-            if rec["typeOfIdentifier"] != typeOfIdentifier:
-                continue
-            if oldName != rec["name"]:
-                continue
-            recFields = rec["siblings"]
-            if recFields == None:
-                continue
-            recFields = rec["siblings"]
-            for field in siblings:
-                if field == "":
-                    continue
-                if field in recFields:
-                    return i
-        return None
-
-    elif typeOfIdentifier == "ParameterName":
-        enclosingMethods = renameData["enclosingMethod"]
-        for i in range(len(recommendation)):
-            rec = recommendation[i]
-            if rec["typeOfIdentifier"] != typeOfIdentifier:
-                continue
-            if oldName != rec["name"]:
-                continue
-            if enclosingClass != rec["enclosingCLass"]:
-                continue
-            if enclosingMethods != rec["enclosingMethod"]:
-                continue
-            return i
-        return None
-    
-    elif typeOfIdentifier == "VariableName":
-        enclosingMethods = renameData["enclosingMethod"]
-        for i in range(len(recommendation)):
-            rec = recommendation[i]
-            if rec["typeOfIdentifier"] != typeOfIdentifier:
-                continue
-            if oldName != rec["name"]:
-                continue
-            if enclosingClass != rec["enclosingCLass"]:
-                continue
-            if enclosingMethods != rec["enclosingMethod"]:
-                continue
-            return i
-        return None
-    
-    else:
-        _logger.error("unknown typeOfIdentifier")
-
 def evaluate(renames, recommendation, tableData, op):
     #print(len(renames), len(recommendation))
     if len(recommendation) == 0:
@@ -519,70 +350,35 @@ def evaluate(renames, recommendation, tableData, op):
             recKey = str([rec["line"], rec["typeOfIdentifier"], rec["name"], rec["files"]])
             if key == recKey:
                 trueRecommendIndex.append([i, k])
-                #if op == "all":
-                    #rankTrueRecommend[rec["rank"]-1][0] += 1
-                #flag = True
                 break
-        '''
-        if op != "None":
-            if flag:
-                continue
-            ri = canRecommendation(r, recommendation, tableData)
-            if ri == None:
-                continue
-            trueRecommendIndex.append([i, ri])
-            if op == "all":
-                rankTrueRecommend[recommendation[ri]["rank"]-1][0] += 1
-        '''
-        #print(i, ri)
-                
-    '''
-    rIdentifier = []
-    recIdentifier = []
-    for r in renames:
-        rIdentifier.append(str([r["line"], r["typeOfIdentifier"], r["oldname"], r["files"]]))
 
-    for r in recommendation:
-        recIdentifier.append(str([r["line"], r["typeOfIdentifier"], r["name"], r["files"]]))
-    
-    trueRecommend = list(set(rIdentifier) & set(recIdentifier))
-    trueRecommendIndex = [(rIdentifier.index(t), recIdentifier.index(t)) for t in trueRecommend]
-    '''
-    #print(trueRecommendIndex)
-    #print(f"recall = {len(trueRecommend)/len(renames)}, precision = {len(trueRecommend)/len(recommendation)}")
     return trueRecommendIndex
-
-def writeMissOperation(missCSV):
-    with open(missCSV, 'w') as wCSV:
-        w = csv.writer(wCSV)
-        for op, missDic in missOperation.items():
-            w.writerow([op])
-            for operation, nums in missDic.items():
-                w.writerow([operation]+nums)
-
-
 
 if __name__ ==  "__main__":
     args = setArgument()
     setLogger(INFO)
     setGitlog(args.source)
-    detailCSV = os.path.join(args.source,'integrateDetail.csv')  ##
-    resultCSV = os.path.join(args.source,'integrateResult.csv') 
-    missCSV = os.path.join(args.source,'missOperation.csv') 
-    mecCSV = os.path.join(args.source,'motivationExampleCandidate.csv') 
-    allCSV = os.path.join(args.source,'all.csv') 
+    evalRankingPath = os.path.join(args.source, 'randomRanking')
+    if not os.path.isdir(evalRankingPath):
+        os.mkdir(evalRankingPath)
+    detailCSV = os.path.join(evalRankingPath,'integrateDetail.csv')  ##
+    resultCSV = os.path.join(evalRankingPath,'integrateResult.csv') 
+    missCSV = os.path.join(evalRankingPath,'missOperation.csv') 
+    mecCSV = os.path.join(evalRankingPath,'motivationExampleCandidate.csv') 
+    allCSV = os.path.join(evalRankingPath,'all.csv') 
+    operations = setOperations(args.source, "all")
+    recommendName, renameInfo = setRename(args.source, "recommend_all_normalize_random.json")
 
-    #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
     for fileName, op in researchFileNames.items():
-        operations = setOperations(args.source, "all")
-        _showRQFigure.setOperations(operations)
-        recommendName, renameInfo = setRename(args.source, fileName)
+        print(op)
+        _showRandomFigure.setOperations(operations)
         result_info.append([fileName])
 
         _logger.debug(f"start researching {fileName}")
         allRename = 0
         allRec = 0
         allTrue = 0
+        allSetCount = 0
         for commit in renameInfo.keys():
             if commit not in commitToDate:
                 continue
@@ -591,23 +387,26 @@ if __name__ ==  "__main__":
             #tableData = ExTable(tablePath)
             tableData = None
             if fileName == "recommend_none.json":
-                countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op)
+                countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, int(fileName))
             else:
-                countRename, countRec, countTrue = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op)
+                countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, int(fileName))
             allRename += countRename
             allRec += countRec
             allTrue += countTrue
+            allSetCount += setCount
         
         result_info.append(["allRenames", allRename, "allRecommend", allRec,
                     "allTrueRecommend", allTrue, "precision", allTrue/allRec if allRec != 0 else 0,
                         "recall", allTrue/allRename if allRename != 0 else 0])
         result_info.append([""])
-    
-    writeMissOperation(missCSV)
-    _showRQFigure.calculateData()
-    #_showRQFigure.showConsole()
-    _showRQFigure.showFigure(args.source)
+        print(f"set count = {allSetCount}")
+        if args.D:
+            print("dry run")
+            exit(0)
 
+    _showRandomFigure.calculateData()
+    #_showRQFigure.showConsole()
+    _showRandomFigure.showFigure(evalRankingPath)
     with open(detailCSV, 'w') as dCSV:
         w = csv.writer(dCSV)
         w.writerows(detail_info)
@@ -615,6 +414,7 @@ if __name__ ==  "__main__":
     with open(resultCSV, 'w') as dCSV:
         w = csv.writer(dCSV)
         w.writerows(result_info)
+
 
     with open(allCSV, 'w') as dCSV:
         w = csv.writer(dCSV)
@@ -639,21 +439,6 @@ if __name__ ==  "__main__":
             else:
                 w.writerow([i])
                 w.writerow([0])
-        #w.writerow(rankTrueRecommend)
-    with open(mecCSV, 'w') as dCSV:
-        w = csv.writer(dCSV)
-        normDic = motivationExample["Normalize"]
-        allDic = motivationExample["All"]
-        relDic = motivationExample["Relation"]
-        noneDic = motivationExample["None"]
-        maxDic = ""
-        maxNum = 0
-        for c in normDic.keys():
-            if normDic[c] < allDic[c] and relDic[c] < allDic[c]:
-                w.writerow([c])
-            if maxNum < allDic[c] - normDic[c] :
-                maxNum = allDic[c] - normDic[c]
-                maxDic = c
-        print(maxDic, maxNum)
+
         
 

@@ -116,7 +116,7 @@ def getCommitsInfo(commit, num):
     return researchCommits
 
 def getKey(dic):
-    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
+    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] + dic["typeOfIdentifier"]
 
 def getOperationGroup(commit, renameInfo, operations, num):
     researchCommits = getCommitsInfo(commit, num)

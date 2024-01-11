@@ -8,7 +8,6 @@ import datetime
 import traceback
 import subprocess
 import argparse
-from multiprocessing import Pool
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG, log
 import re
 
@@ -27,6 +26,7 @@ def setArgument():
     parser = argparse.ArgumentParser()
     parser.add_argument('source', help='set directory containing repositories to be analyzed')
     parser.add_argument('-D', help='dry run (only check how many archives will be created)', action='store_true', default=False)
+    parser.add_argument('-f', help='force', action='store_true', default=False)
     args = parser.parse_args()
     return args
 
@@ -37,6 +37,10 @@ def setGitlog(path):
     gitInfo = gitRe.findall(gitLog)
     for info in gitInfo:
         commit = info[0]
+        author = info[1]
+        data = info[2]
+        if commit == "5c7f97f1015cc67e6b8ee71177ae1b877482e832":
+            print(commit, author, data)
         COMMIT.add(commit)
     return
 
@@ -61,7 +65,8 @@ def filterData(data):
     filter = map(__containAbbr, data['oldname'], data['newname'])
     filtered = data[pd.Series(filter)]
     commits = filtered.groupby('commit').size()
-    commits = commits[commits > 1]
+    #commits = commits[commits > 1]
+    commits = commits[commits > 3]
     #LOGGER.info(f'{len(commits)} commits may contain abbreviation rename')
     LOGGER.info(f'total {commits.sum()} renames')
     #commits = commits.sample(frac=0.1, random_state=0)
@@ -75,9 +80,9 @@ def __containAbbr(oldName, newName):
 def gitArchive(root, directory, sha1):
     try:
         LOGGER.info(f'[{os.getpid()}] {directory}: archive commit {sha1}^')
-        archiveDir = directory.joinpath(sha1).joinpath('repo')
+        archiveDir = directory.joinpath(sha1).joinpath('record.json')
         # os.path.join(os.path.join(directory, sha1), 'repo')
-        if os.path.isdir(archiveDir):
+        if os.path.isfile(archiveDir):
             LOGGER.info(f'[{os.getpid()}] {archiveDir} already exists')
             return
         os.makedirs(archiveDir, exist_ok=True)
@@ -91,7 +96,19 @@ def gitArchive(root, directory, sha1):
         p2 = subprocess.run(extract, input=p1.stdout, check=True)
     except:
         traceback.print_exc()
+        exit(1)
     return
+
+def doTable(root, directory, sha1):
+    try:
+        archiveDir = directory.joinpath(sha1)
+        if not os.path.isdir(archiveDir):
+            print(f"{archiveDir} is not existed")
+            exit(1)
+        cp = subprocess.run(f'sh renas/table.sh {archiveDir}', shell=True, stdout=subprocess.PIPE)
+    except:
+        traceback.print_exc()
+        exit(1)
 
 def gitArchiveWrapper(arg):
     return gitArchive(*arg)
@@ -128,11 +145,15 @@ if __name__ == "__main__":
             LOGGER.info('dry run')
         else:
             LOGGER.info('create archives')
-            with Pool(8) as pool:
-                pool.map(gitArchiveWrapper, gitArchiveArgs, chunksize=1)
+            count = 0
+            for i in gitArchiveArgs:
+                count+=1
+                LOGGER.info(f'{count} / {len(gitArchiveArgs)}')
+                gitArchiveWrapper(i)
+                doTable(i[0], i[1], i[2])
+
             data.to_json(root.joinpath('goldset.json'), orient='records', indent=4)
     except Exception:
         LOGGER.exception('')
         pass
     # LOGGER.info(f'{abbrCommits} commits may contain abbreviation rename')
-

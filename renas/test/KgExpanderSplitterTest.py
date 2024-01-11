@@ -11,7 +11,7 @@ class KgExpanderSplitterTest(unittest.TestCase):
         self.assertEqual(['', '', '', ''], result['delimiter'])
         self.assertEqual(['LOWER', 'TITLE', 'TITLE'], result['case'])
         self.assertEqual(['test', 'camel', 'case'], result['split'])
-        self.assertEqual(['CAMEL'], result['pattern'])
+        self.assertEqual(['LCAMEL'], result['pattern'])
     
     def testSnakeCase(self):
         result = self.__splitter.split('TEST_SNAKE_CASE')

@@ -7,6 +7,7 @@ from logging import getLogger, DEBUG
 from itertools import zip_longest
 import pandas as pd
 import math
+import os
 
 _lemmatizer = LemmaManager()
 _abbrManager = None
@@ -46,7 +47,7 @@ class Rename:
         return self.__new
     
     def getOp(self):
-        return [self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
+        return [self.__old["files"]+str(self.__old["line"])+self.__old["name"]+self.__old["typeOfIdentifier"], self.getDiff()]
 
     def debugOperation(self, oldName, newName):
         global _abbrManager, _expandManager
@@ -106,8 +107,23 @@ class Rename:
         _logger.debug(f'join: {joinedWords}')
         _logger.debug(f'{idDict["name"]} should be renamed to {idDict["join"]}')
         idDict["diffLine"] = abs(idDict["line"] - self.__old["line"])
-        idDict["sameFile"] = 1 if idDict["files"] == self.__old["files"] else 2
+        #idDict["sameFile"] = 1 if idDict["files"] == self.__old["files"] else 2
+        idDict["sameFile"] = self.calculateFileDistance(idDict["files"], self.__old["files"])
         return idDict
+
+    def calculateFileDistance(self, recFile, trigFile):
+        recFileLength = len(recFile.split('/'))
+        trigFileLength = len(trigFile.split('/'))
+        #print(recFile, trigFile)
+
+        try:
+            common = os.path.commonpath([recFile, trigFile])
+            commonFileLength = len(common.split('/'))
+            #print(commonFileLength)
+            return recFileLength + trigFileLength - 2*commonFileLength
+        except:
+            print("something wrong")
+            return recFileLength + trigFileLength
 
     def __overWriteDetail(self, old):
         detail = splitIdentifier(old['name'])
@@ -182,7 +198,7 @@ class Rename:
         oldName = self.__old["normalized"]
         similarity = len(set(oldName) & set(recommendName)) * 2 / (len(oldName) + len(recommendName))
         
-        return 1- similarity
+        return 1 - similarity
 
     #変更操作format抽出
     def extractFormat(self):

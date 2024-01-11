@@ -14,6 +14,8 @@ import pandas as pd
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG, log, basicConfig
 from copy import deepcopy
 from .util.Rename import Rename
+import operator
+from .showRQFigure import showRQFigure
 
 researchFileNames = {
                     "recommend_none.json": "None",
@@ -28,6 +30,9 @@ detail_info = [['triggerCommit', 'file', 'line', 'type', 'triggeroldname', 'trig
                 'file', 'line', 'type', 'oldname' ,'truename', 'recommendname']]
 
 result_info = []
+topN = 20
+maxCost = 25
+_showRQFigure = showRQFigure(topN, maxCost)
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -38,8 +43,14 @@ def setArgument():
     return args
 
 
+def setOperations(path):
+    filePath = os.path.join(path, "operations.json")
+    with open(filePath, 'r') as f:
+        operations = json.load(f)["all"]
+    return operations
+
 def getKey(dic):
-    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
+    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] + dic["typeOfIdentifier"]
 
 
 def setRename(path, fileName):
@@ -66,15 +77,15 @@ def detail(triggerRename, renames, recommend, op):
     if op != "All":
         return
 
-    triggerKey = triggerRename["commit"] + triggerRename["file"] + str(triggerRename["line"]) + triggerRename["oldName"]
+    triggerKey = getKey(triggerRename)
     correctIndex = []
     correct = 0
     for rr in range(len(renames)):
         rename = renames[rr]
-        key = rename["commit"] + rename["file"] + str(rename["line"]) + rename["oldName"]
+        key = getKey(rename)
         if triggerKey == key:
             continue
-        sameKey = str(rename["line"]) + rename["type"] + rename["oldName"] + rename["file"]
+        sameKey = str(rename["line"]) + rename["typeOfIdentifier"] + rename["oldname"] + rename["files"]
         for r in range(len(recommend)):
             rec = recommend[r]
             recKey = str(rec["line"]) + rec["typeOfIdentifier"] + rec["name"] + rec["files"]
@@ -85,25 +96,25 @@ def detail(triggerRename, renames, recommend, op):
     precision = correct / len(recommend) if len(recommend) != 0 else 0
     recall = correct / (len(renames) - 1)
     fscore = 2 * precision * recall / (precision + recall) if correct != 0 else 0
-    result_info.append([triggerRename["commit"], triggerRename["oldName"], triggerRename["newName"], triggerRename["type"], precision, recall, fscore])
+    result_info.append([triggerRename["commit"], triggerRename["oldname"], triggerRename["newName"], triggerRename["typeOfIdentifier"], precision, recall, fscore])
     
     for ci in correctIndex:
         reI = ci[0]
         recI = ci[1]
-        detail_info.append([triggerRename["commit"], triggerRename["file"], triggerRename["line"], triggerRename["type"], triggerRename["oldName"], triggerRename["newName"], 
-                            renames[reI]["file"], renames[reI]["line"], renames[reI]["type"], renames[reI]["oldName"], renames[reI]["newName"], recommend[recI]["join"], recommend[recI]["rank"]])
+        detail_info.append([triggerRename["commit"], triggerRename["files"], triggerRename["line"], triggerRename["typeOfIdentifier"], triggerRename["oldname"], triggerRename["newName"], 
+                            renames[reI]["files"], renames[reI]["line"], renames[reI]["typeOfIdentifier"], renames[reI]["oldname"], renames[reI]["newName"], recommend[recI]["join"], recommend[recI]["rank"]])
     for r in range(len(renames)):
         rename = renames[r]
         flag = True
-        key = rename["commit"] + rename["file"] + str(rename["line"]) + rename["oldName"]
+        key = getKey(rename)
         if triggerKey == key:
             continue
         for v in correctIndex:
             if r == v[0]:
                 flag = False
         if flag:
-            detail_info.append([triggerRename["commit"], triggerRename["file"], triggerRename["line"], triggerRename["type"], triggerRename["oldName"], triggerRename["newName"], 
-                                renames[r]["file"], renames[r]["line"], renames[r]["type"], renames[r]["oldName"], renames[r]["newName"], "NAN", "Nan"])
+            detail_info.append([triggerRename["commit"], triggerRename["files"], triggerRename["line"], triggerRename["typeOfIdentifier"], triggerRename["oldname"], triggerRename["newName"], 
+                                renames[r]["files"], renames[r]["line"], renames[r]["typeOfIdentifier"], renames[r]["oldname"], renames[r]["newName"], "NAN", "Nan"])
 
     for r in range(len(recommend)):
         flag = True
@@ -111,22 +122,30 @@ def detail(triggerRename, renames, recommend, op):
             if r == v[0]:
                 flag = False
         if flag:
-            detail_info.append([triggerRename["commit"], triggerRename["file"], triggerRename["line"], triggerRename["type"], triggerRename["oldName"], triggerRename["newName"], 
+            detail_info.append([triggerRename["commit"], triggerRename["files"], triggerRename["line"], triggerRename["typeOfIdentifier"], triggerRename["oldname"], triggerRename["newName"], 
                                 recommend[r]["files"], recommend[r]["line"], recommend[r]["typeOfIdentifier"], recommend[r]["name"], "NAN", recommend[r]["join"], recommend[r]["rank"]])
 
 def evaluate(triggerRename, renames, recommend, op):
-    triggerKey = triggerRename["commit"] + triggerRename["file"] + str(triggerRename["line"]) + triggerRename["oldName"]
+    triggerKey = getKey(triggerRename)
     correct = 0
-    for rename in renames:
+    result = []
+    triedkey = set()
+    for re in range(len(renames)):
+        rename = renames[re]
 
-        key = rename["commit"] + rename["file"] + str(rename["line"]) + rename["oldName"]
+        key = getKey(rename)
         if triggerKey == key:
             continue
-        sameKey = str(rename["line"]) + rename["type"] + rename["oldName"] + rename["file"]
-        for rec in recommend:
+        if key in triedkey:
+            continue
+        triedkey.add(key)
+        sameKey = str(rename["line"]) + rename["typeOfIdentifier"] + rename["oldname"] + rename["files"]
+        for r in range(len(recommend)):
+            rec = recommend[r]
             recKey = str(rec["line"]) + rec["typeOfIdentifier"] + rec["name"] + rec["files"]
             if sameKey == recKey:
                 correct += 1
+                result.append([re, r])
                 break
     precision = correct / len(recommend) if len(recommend) != 0 else 0
     recall = correct / (len(renames) - 1)
@@ -134,6 +153,8 @@ def evaluate(triggerRename, renames, recommend, op):
     allPrecision[op].append(precision)
     allRecall[op].append(recall)
     allFscore[op].append(fscore)
+    print(triggerRename["commit"], result)
+    _showRQFigure.update(triggerRename, recommend, renames, result, op)
 
 def changeTypeName(typeOfIdentifier):
     if typeOfIdentifier == "Parameter":
@@ -158,6 +179,7 @@ resultRepo = os.path.join(root, 'dataLooking')
 allCSV = os.path.join(resultRepo, 'all.csv')
 detailCSV = os.path.join(resultRepo,'integrateDetailAll.csv')  ##
 resultCSV = os.path.join(resultRepo,'integrateResultAll.csv') 
+_showRQFigure.setOperations(setOperations(root))
 
 coRenameGroup = {}
 
@@ -182,8 +204,8 @@ for i, row in datalooking.iterrows():
     if coRename not in coRenameGroup[commit]:
         coRenameGroup[commit][coRename] = []
     
-    data = {"oldName": oldName, "newName": newName, "Operation": operation, "coRename": coRename, "commitdate": commitDate,
-             "commit": commit, "type": typeOfIdentifier, "file": file, "line": line}
+    data = {"oldname": oldName, "newName": newName, "Operation": operation, "coRename": coRename, "commitdate": commitDate,
+             "commit": commit, "typeOfIdentifier": typeOfIdentifier, "files": file, "line": line}
     coRenameGroup[commit][coRename].append(data)
 
 for fileName, op in researchFileNames.items():
@@ -194,11 +216,14 @@ for fileName, op in researchFileNames.items():
     for commit, coRenames in coRenameGroup.items():
         for num, renames in coRenames.items():
             for triggerRename in renames:
-                key = triggerRename["commit"] + triggerRename["file"] + str(triggerRename["line"]) + triggerRename["oldName"]
+                key = getKey(triggerRename)
                 if key not in recommendName:
                     print(key)
                     continue
-                recommend = recommendName[key]
+                if op == "All" or op == "Normalize":
+                    recommend = sorted(recommendName[key], key=operator.itemgetter('rank', 'hop', 'sameFile', 'diffLine', 'id'))
+                else:
+                    recommend = recommendName[key]
                 if len(renames) <= 1:
                     print(renames)
                     continue
@@ -240,3 +265,6 @@ with open(allCSV, 'w') as dCSV:
         else:
             w.writerow([i])
             w.writerow([0])
+_showRQFigure.calculateData()
+#_showRQFigure.showConsole()
+_showRQFigure.showFigure(resultRepo)
