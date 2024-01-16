@@ -25,7 +25,9 @@ import statistics
 
 _logger = getLogger(__name__)
 
-ratio = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25]
+devideNumber = 20
+thresholdNumber = 100
+ratio = [i/devideNumber for i in range(0, devideNumber+1)]
 researchFileNames = {f"recommend_all_normalize{i}.json": f"All{i}" for i in ratio}
 
 operations = ["insert", "delete", "replace", "order", "format"]
@@ -34,19 +36,19 @@ UPPER_HOP = 100
 
 class showRandomFigure:
 
-    def __init__(self, topN, maxCost):
+    def __init__(self, topN):
         self.topN = topN
         self.topNData = {v: [[0, 0, 0] for _ in range(topN)] for v in researchFileNames.values()}
         #[count, precision, recall, fscore]
         self.operationData = {v: {op: [0, 0, 0, 0] for op in operations} for v in researchFileNames.values()}
         self.hopData = {v: [[0, 0, 0] for _ in range(UPPER_HOP)] for v in researchFileNames.values()}
-        self.costData = {v: [[0, 0, 0] for _ in range(maxCost)] for v in researchFileNames.values()}
+        self.costData = {v: [[0, 0, 0] for _ in range(thresholdNumber+1)] for v in researchFileNames.values()}
         #識別子の種類, 成功数, 失敗数
         self.typeData = {v: {toi: [0, 0, 0] for toi in typeOfIdentifiers} for v in researchFileNames.values()}
         self.countRename = {v: 0 for v in researchFileNames.values()}
         self.MAPData = {v: [] for v in researchFileNames.values()}
         self.MRRData = {v: [] for v in researchFileNames.values()}
-        self.maxCost = maxCost
+        self.maxCost = thresholdNumber
         self.operations = operations
 
     def setOperations(self, operations):
@@ -68,34 +70,36 @@ class showRandomFigure:
         renamesLength = len(renames)
         recommendsLength = len(recommends)
         hopAllCount = [0 for _ in range(UPPER_HOP)]
-        costAllCount = [0 for _ in range(self.maxCost)]
+        costAllCount = [0 for _ in range(self.maxCost+1)]
         typeAllCount = {t: 0 for t in typeOfIdentifiers}
         for recommendInfo in recommends:
-            cost = math.ceil(recommendInfo["rank"]) - 1
+            cost = math.floor(recommendInfo["rank"])
             hop = recommendInfo["hop"] - 1
             typeOfId = recommendInfo["typeOfIdentifier"]
             hopAllCount[hop] += 1
-            if cost < self.maxCost:
+            if cost <= self.maxCost:
                 costAllCount[cost] += 1
             typeAllCount[typeOfId] += 1
 
         topNCount = [0 for _ in range(self.topN)]
         hopCount = [0 for _ in range(UPPER_HOP)]
-        costCount = [0 for _ in range(self.maxCost)]
+        costCount = [0 for _ in range(self.maxCost+1)]
         typeCount = {t: 0 for t in typeOfIdentifiers}
         #rankingEvaluation = [0 for _ in range(self.topN)]
         for trIdx in trueRecommendIndex:
             renameInfo = renames[trIdx[0]]
             recommendInfo = recommends[trIdx[1]]
-            cost = math.ceil(recommendInfo["rank"]) - 1
+            cost = math.floor(recommendInfo["rank"])
             hop = recommendInfo["hop"] - 1
             ranking = trIdx[1]
             typeOfId = recommendInfo["typeOfIdentifier"]
             if ranking < self.topN:
                 topNCount[ranking] += 1
             hopCount[hop] += 1
-            if cost < self.maxCost:
+            if cost <= self.maxCost:
                 costCount[cost] += 1
+            #if cost == 100.0:
+            #    print(recommendInfo['similarity'], recommendInfo['relationship'],recommendInfo['rank'] , option)
             typeCount[typeOfId] += 1
         precision = len(trueRecommendIndex) / recommendsLength if recommendsLength != 0 else 0
         recall = len(trueRecommendIndex) / renamesLength
@@ -141,7 +145,7 @@ class showRandomFigure:
         nCount = 0
         for tncIdx in range(self.topN):
             nCount += topNCount[tncIdx]
-            naCount = (tncIdx + 1)
+            naCount = (tncIdx + 1) if tncIdx + 1 <= recommendsLength else recommendsLength
             precision = nCount / naCount if naCount != 0 else 0
             recall = nCount / renamesLength
             fscore = self.calcFscore(precision, recall)
@@ -178,7 +182,8 @@ class showRandomFigure:
     def updateCostData(self, costAllCount, costCount, renamesLength, recommendsLength, option):
         cCount = 0
         caCount = 0
-        for cc in range(self.maxCost):
+        for c in range(self.maxCost + 1):
+            cc = self.maxCost - c
             cCount += costCount[cc]
             caCount += costAllCount[cc]
             precision = cCount / caCount if caCount != 0 else 0
@@ -204,7 +209,7 @@ class showRandomFigure:
             return 2 * precision * recall / (precision + recall)
 
     def getKey(self, dic):
-        return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] + dic["typeOfIdentifier"]
+        return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
     
     def showConsole(self):
         print(self.costData)
@@ -215,7 +220,7 @@ class showRandomFigure:
         print(self.countRename)
 
     def calculateData(self):
-        allN = self.countRename["All1"]
+        allN = self.countRename["All1.0"]
         print(self.countRename)
         for op, v in self.costData.items():
             for l in range(len(v)):
@@ -263,12 +268,12 @@ class showRandomFigure:
                      
         plt.rcParams['font.family'] = 'Hiragino Maru Gothic Pro'
         plt.rcParams["savefig.dpi"] = 300
-        self.showTopNFigure(figPath)
-        #self.showCostFigure(figPath)
-        self.showHopFigure(figPath)
-        self.showTypeTable(figPath)
+        #self.showTopNFigure(figPath)
+        self.showCostFigure(figPath)
+        #self.showHopFigure(figPath)
+        #self.showTypeTable(figPath)
         plt.rcParams['font.family'] = 'Times New Roman'
-        self.showOperationTable(figPath)
+        #self.showOperationTable(figPath)
         
     def showTopNFigure(self, path):
         columns = ["Precision", "Recall", "Fscore"]
@@ -279,7 +284,7 @@ class showRandomFigure:
                 col = columns[i]
                 data = np.array(self.topNData[o])[:, i]
                 fig, ax = plt.subplots()
-                p1 = ax.bar(leftValue, data, color=colors[i], tick_label=leftValue)
+                p1 = ax.bar(leftValue, data, color=colors[i])
                 fig.savefig(os.path.join(path, 'topN{}{}.png'.format(col, o)))
                 plt.close(fig)
 
@@ -299,11 +304,11 @@ class showRandomFigure:
             plt.close(fig)
 
     def showCostFigure(self, path):
-        useCost = self.costData["All1"]
+        useCost = self.costData["All1.0"]
         colors = ["red", "green", "gold"]
         columns = ["Precision", "Recall", "Fscore"]
         costData = np.array(useCost)
-        leftValue = np.array([i+1 for i in range(self.maxCost)])
+        leftValue = np.array([i / self.maxCost for i in range(self.maxCost + 1)])
 
         for i in range(len(columns)):
             col = columns[i]

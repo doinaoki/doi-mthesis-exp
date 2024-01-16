@@ -15,6 +15,7 @@ import operator
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import pytrec_eval
 
 from .util.ExTable import ExTable
 from datetime import datetime, date, timedelta
@@ -34,6 +35,7 @@ researchFileNames = {
 operations = ["insert", "delete", "replace", "order", "format"]
 typeOfIdentifiers = ["ParameterName", "VariableName", "MethodName", "FieldName", "ClassName"]
 UPPER_HOP = 100
+thresholdNumber = 100
 
 class showRQFigure:
 
@@ -43,13 +45,13 @@ class showRQFigure:
         #[count, precision, recall, fscore]
         self.operationData = {v: {op: [0, 0, 0, 0] for op in operations} for v in researchFileNames.values()}
         self.hopData = {v: [[0, 0, 0] for _ in range(UPPER_HOP)] for v in researchFileNames.values()}
-        self.costData = {v: [[0, 0, 0] for _ in range(maxCost)] for v in researchFileNames.values()}
+        self.costData = {v: [[0, 0, 0] for _ in range(thresholdNumber + 1)] for v in researchFileNames.values()}
         #識別子の種類, 成功数, 失敗数
         self.typeData = {v: {toi: [0, 0, 0, 0] for toi in typeOfIdentifiers} for v in researchFileNames.values()}
         self.countRename = {v: 0 for v in researchFileNames.values()}
         self.MAPData = {"Normalize": [], "All": []}
         self.MRRData = {"Normalize": [], "All": []}
-        self.maxCost = maxCost
+        self.maxCost = thresholdNumber
         self.operations = operations
 
     def setOperations(self, operations):
@@ -71,14 +73,14 @@ class showRQFigure:
         renamesLength = len(renames)
         recommendsLength = len(recommends)
         hopAllCount = [0 for _ in range(UPPER_HOP)]
-        costAllCount = [0 for _ in range(self.maxCost)]
+        costAllCount = [0 for _ in range(self.maxCost + 1)]
         typeAllCount = {t: 0 for t in typeOfIdentifiers}
         for recommendInfo in recommends:
-            cost = math.ceil(recommendInfo["rank"]) - 1
+            cost = math.floor(recommendInfo["rank"])
             hop = recommendInfo["hop"] - 1
             typeOfId = recommendInfo["typeOfIdentifier"]
             hopAllCount[hop] += 1
-            if cost < self.maxCost:
+            if cost <= self.maxCost:
                 costAllCount[cost] += 1
             #typeAllCount[typeOfId] += 1
 
@@ -86,60 +88,107 @@ class showRQFigure:
             typeOfId = ren["typeOfIdentifier"]
             typeAllCount[typeOfId] += 1
 
-        topNCount = [0 for _ in range(self.topN)]
+        topNCount = [0 for _ in range(max(recommendsLength, self.topN))]
         hopCount = [0 for _ in range(UPPER_HOP)]
-        costCount = [0 for _ in range(self.maxCost)]
+        costCount = [0 for _ in range(self.maxCost + 1)]
         typeCount = {t: 0 for t in typeOfIdentifiers}
         #rankingEvaluation = [0 for _ in range(self.topN)]
         for trIdx in trueRecommendIndex:
             renameInfo = renames[trIdx[0]]
             recommendInfo = recommends[trIdx[1]]
-            cost = math.ceil(recommendInfo["rank"]) - 1
+            cost = math.floor(recommendInfo["rank"])
             hop = recommendInfo["hop"] - 1
             ranking = trIdx[1]
             typeOfId = recommendInfo["typeOfIdentifier"]
             if option == "All" or option == "Normalize":
-                if ranking < self.topN:
+                if ranking < recommendsLength:
                     topNCount[ranking] += 1
             hopCount[hop] += 1
-            if cost < self.maxCost:
+            if cost <= self.maxCost:
                 costCount[cost] += 1
-            if cost < 10:
+            if cost <= self.maxCost:
                 typeCount[typeOfId] += 1
-        
-        precision = self.calculatePrecision(9, costCount, costAllCount)
-        recall = self.calculateRecall(9, costCount, renamesLength)
-        fscore = self.calcFscore(precision, recall)
 
-        self.updateTopNData(topNCount, renamesLength, recommendsLength, option)
-        self.updateOperationData(triggerRename, precision, recall, fscore, option)
-        self.updateHopData(hopAllCount, hopCount, renamesLength, recommendsLength, option)
-        self.updateCostData(costAllCount, costCount, renamesLength, recommendsLength, option)
-        self.updateTypeData(triggerRename, precision, recall, fscore, option)
-        self.updateMAP(topNCount, renamesLength, recommendsLength, option)
-        self.updateMRR(topNCount, renamesLength, recommendsLength, option)
+        #self.updateHopData(hopAllCount, hopCount, renamesLength, recommendsLength, option)
+        #self.updateOperationData(triggerRename, precision, recall, fscore, option)
+        #self.updateTypeData(triggerRename, precision, recall, fscore, option)
+
+        precision = 0
+        recall = 0
+        fscore = 0
+        if option != "All":
+            precision = len(trueRecommendIndex) / recommendsLength if recommendsLength != 0 else 0
+            recall = len(trueRecommendIndex) / renamesLength
+            fscore = self.calcFscore(precision, recall)
+            self.costData[option][0][0] += precision
+            self.costData[option][0][1] += recall
+            self.costData[option][0][2] += fscore
+        #else:  
+        #    precision = self.calculatePrecision(55, costCount, costAllCount)
+        #    recall = self.calculateRecall(55, costCount, renamesLength)
+        #    fscore = self.calcFscore(precision, recall)
+
+        if option == "All":
+            self.updateCostData(costAllCount, costCount, renamesLength, recommendsLength, option)
+        if option == "All" or option == "Normalize":
+            v = self.usePytrec(renames, recommends, triggerRename)
+            pp, pr = self.updateTopNData(topNCount, renamesLength, recommendsLength, option)
+            Map = self.updateMAP(topNCount, renamesLength, trueRecommendIndex, option)
+            Mrr = self.updateMRR(topNCount, renamesLength, recommendsLength, option)
+            if v['recall_10'] != pr or v['P_10'] != pp:
+                print(f"{v['recall_10']}, {pr}, {v['P_10']}, {pp}")
+                print(trueRecommendIndex)
+                print(topNCount)
+                print("precision 5 error")
+                exit(1)
+
+            if abs(v["map"] - Map) >= 10**(-4)  or abs(v["recip_rank"] - Mrr) >= 10**(-4):
+                print(f"{v}, {Map}, {Mrr}")
+                print(trueRecommendIndex)
+                print(topNCount)
+                print("map or mrr error")
+                exit(1)
 
         self.countRename[option] += 1
+
+    def usePytrec(self, renames, recommends, triggerRename):
+        triggerKey = self.getKey(triggerRename)
+        qrel = {triggerKey: {}}
+        run = {triggerKey: {}}
+        for re in renames:
+            qrel[triggerKey][self.getKey(re)+re["typeOfIdentifier"]] = 1
+        for r in range(len(recommends)):
+            rec = recommends[r]
+            key = triggerRename['commit'] + rec['files'] + str(rec['line']) + rec['name']+rec['typeOfIdentifier']
+            run[triggerKey][key] = len(recommends) - r
+        evaluator = pytrec_eval.RelevanceEvaluator(
+            qrel, {'map', 'recip_rank', 'recall', 'P'})
+        value = evaluator.evaluate(run)
+        #print(qrel)
+        #print(run)
+        return value[triggerKey]
 
     def calculatePrecision(self, cost, costCount, costAllCount):
         sumCost = 0
         sumTrueCost = 0
-        for i in range(cost):
-            sumCost += costAllCount[i]
-            sumTrueCost += costCount[i]
+        for i in range(cost + 1):
+            ii = self.maxCost - i
+            sumCost += costAllCount[ii]
+            sumTrueCost += costCount[ii]
         return sumTrueCost / sumCost if sumCost != 0 else 0
 
     def calculateRecall(self, cost, costCount, renamesLength):
         sumTrueCost = 0
-        for i in range(cost):
-            sumTrueCost += costCount[i]
+        for i in range(cost + 1):
+            ii = self.maxCost - i
+            sumTrueCost += costCount[ii]
         return sumTrueCost / renamesLength if renamesLength != 0 else 0
 
-    def updateMAP(self, topNCount, renamesLength, recommendsLength, option):
+    def updateMAP(self, topNCount, renamesLength, trueRecommendIndex, option):
         if option != "Normalize" and option != "All":
             return
-        searchLength = self.topN
-        print(renamesLength, recommendsLength)
+
+        searchLength = len(topNCount)
         countCorrect = 0
         MAP = 0
         for sl in range(searchLength):
@@ -150,20 +199,21 @@ class showRQFigure:
                 print(topNCount)
                 print("something wrong")
                 exit(1)
-                return
         MAP = MAP / renamesLength if renamesLength != 0 else 0
         self.MAPData[option].append(MAP)
+        return MAP
 
-    def updateMRR(self, rankingEvaluation, renamesLength, recommendsLength, option):
+    def updateMRR(self, topNCount, renamesLength, recommendsLength, option):
         if option != "Normalize" and option != "All":
             return
-        searchLength = self.topN
+        searchLength = len(topNCount)
         MRR = 0  
         for sl in range(searchLength):
-            if rankingEvaluation[sl] == 1:
+            if topNCount[sl] == 1:
                 MRR += (1 / (sl + 1))
                 break
         self.MRRData[option].append(MRR)
+        return MRR
               
     
     # Top ?のときの精度
@@ -171,6 +221,8 @@ class showRQFigure:
         if option != "Normalize" and option != "All":
             return
         nCount = 0
+        pr = 0
+        pp = 0
         for tncIdx in range(self.topN):
             nCount += topNCount[tncIdx]
             naCount = (tncIdx + 1)
@@ -180,7 +232,11 @@ class showRQFigure:
             self.topNData[option][tncIdx][0] += precision
             self.topNData[option][tncIdx][1] += recall
             self.topNData[option][tncIdx][2] += fscore
-
+            if naCount == 10:
+                pp = precision
+                pr = recall
+        return pp, pr
+    '''
     # TopN のときの変更操作ごとの精度
     def updateOperationData(self, triggerRename, precision, recall, fscore, option):
         key = self.getKey(triggerRename)
@@ -205,12 +261,13 @@ class showRQFigure:
             self.hopData[option][hc][0] += precision
             self.hopData[option][hc][1] += recall
             self.hopData[option][hc][2] += fscore
-
+    '''
     # costごとの正解率
     def updateCostData(self, costAllCount, costCount, renamesLength, recommendsLength, option):
         cCount = 0
         caCount = 0
-        for cc in range(self.maxCost):
+        for c in range(self.maxCost + 1):
+            cc = self.maxCost - c
             cCount += costCount[cc]
             caCount += costAllCount[cc]
             precision = cCount / caCount if caCount != 0 else 0
@@ -235,15 +292,17 @@ class showRQFigure:
             return 2 * precision * recall / (precision + recall)
 
     def getKey(self, dic):
-        return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] + dic["typeOfIdentifier"]
+        return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] 
     
     def showConsole(self):
-        print(self.costData)
+        #print(self.costData)
         print(self.topNData)
-        print(self.operationData)
-        print(self.typeData)
-        print(self.hopData)
-        print(self.countRename)
+        #print(self.operationData)
+        #print(self.typeData)
+        #print(self.hopData)
+        #print(self.countRename)
+        print(self.MAPData)
+        print(self.MRRData)
 
     def calculateData(self):
         allN = self.countRename["All"]
@@ -252,6 +311,12 @@ class showRQFigure:
                 self.costData[op][l][0] = self.costData[op][l][0] / allN
                 self.costData[op][l][1] = self.costData[op][l][1] / allN
                 self.costData[op][l][2] = self.costData[op][l][2] / allN
+        for op in ["Normalize", "All"]:
+            for l in range(len(self.topNData[op])):
+                self.topNData[op][l][0] = self.topNData[op][l][0] / allN
+                self.topNData[op][l][1] = self.topNData[op][l][1] / allN
+                self.topNData[op][l][2] = self.topNData[op][l][2] / allN
+        '''
         for op, v in self.typeData.items():
             for l in v:
                 allTypeCount = self.typeData[op][l][0]
@@ -260,11 +325,6 @@ class showRQFigure:
                 self.typeData[op][l][1] = round(self.typeData[op][l][1] / allTypeCount, 2)
                 self.typeData[op][l][2] = round(self.typeData[op][l][2] / allTypeCount, 2)
                 self.typeData[op][l][3] = round(self.typeData[op][l][3] / allTypeCount, 2)
-        for op in ["Normalize", "All"]:
-            for l in range(len(self.topNData[op])):
-                self.topNData[op][l][0] = self.topNData[op][l][0] / allN
-                self.topNData[op][l][1] = self.topNData[op][l][1] / allN
-                self.topNData[op][l][2] = self.topNData[op][l][2] / allN
         for op, v in self.hopData.items():
             for l in range(len(v)):
                 self.hopData[op][l][0] = self.hopData[op][l][0] / allN
@@ -278,6 +338,7 @@ class showRQFigure:
                 self.operationData[op][l][1] = round(self.operationData[op][l][1] / n, 2)
                 self.operationData[op][l][2] = round(self.operationData[op][l][2] / n, 2)
                 self.operationData[op][l][3] = round(self.operationData[op][l][3] / n, 2)
+        '''
 
     def showFigure(self, path):
         figPath = os.path.join(path, 'figure')
@@ -314,26 +375,27 @@ class showRQFigure:
             
         plt.rcParams['font.family'] = 'Hiragino Maru Gothic Pro'
         plt.rcParams["savefig.dpi"] = 300
-        #self.showTopNFigure(figPath)
+        self.showTopNFigure(figPath)
         self.showCostFigure(figPath)
-        self.showHopFigure(figPath)
-        self.showTypeTable(figPath)
-        plt.rcParams['font.family'] = 'Times New Roman'
-        self.showOperationTable(figPath)
+        #self.showHopFigure(figPath)
+        #self.showTypeTable(figPath)
+        #plt.rcParams['font.family'] = 'Times New Roman'
+        #self.showOperationTable(figPath)
         
     def showTopNFigure(self, path):
         columns = ["Precision", "Recall", "Fscore"]
         colors = ["red", "green", "gold"]
-        topNData = np.array(self.topNData)
-        leftValue = np.array([i+1 for i in range(self.topN)])
-        for i in range(len(columns)):
-            col = columns[i]
-            data = topNData[:, i]
-            fig, ax = plt.subplots()
-            p1 = ax.bar(leftValue, data, color=colors[i], tick_label=leftValue)
-            fig.savefig(os.path.join(path, 'topN{}'.format(col)))
-            plt.close(fig)
-
+        for k, data in self.topNData.items():
+            topNData = np.array(data)
+            leftValue = np.array([i+1 for i in range(self.topN)])
+            for i in range(len(columns)):
+                col = columns[i]
+                data = topNData[:, i]
+                fig, ax = plt.subplots()
+                p1 = ax.plot(leftValue, data, color=colors[i])
+                fig.savefig(os.path.join(path, 'topN{}{}.pdf'.format(col, k)))
+                plt.close(fig)
+    '''
     def showTypeTable(self, path):
         for i, v in self.typeData.items():
             fig, ax = plt.subplots(figsize=(12,2))
@@ -348,13 +410,14 @@ class showRQFigure:
             ax.axis('tight')
             fig.savefig(os.path.join(path, 'typeTable{}.png'.format(i)))
             plt.close(fig)
-
+    '''
+            
     def showCostFigure(self, path):
         useCost = self.costData["All"]
         colors = ["red", "green", "gold"]
         columns = ["Precision", "Recall", "Fscore"]
         costData = np.array(useCost)
-        leftValue = np.array([i+1 for i in range(self.maxCost)])
+        leftValue = np.array([i/thresholdNumber for i in range(self.maxCost + 1)])
 
         for i in range(len(columns)):
             col = columns[i]
@@ -362,9 +425,10 @@ class showRQFigure:
             fig, ax = plt.subplots()
             #p1 = ax.bar(leftValue, data, color=colors[i], tick_label=leftValue)
             plt.plot(leftValue, data, color=colors[i])
-            fig.savefig(os.path.join(path, 'cost{}.png'.format(col)))
+            fig.savefig(os.path.join(path, 'cost{}.pdf'.format(col)))
             plt.close(fig)
 
+    '''
     def showHopFigure(self, path):
         columns = ["Precision", "Recall", "Fscore"]
         colors = ["red", "green", "gold"]
@@ -392,3 +456,4 @@ class showRQFigure:
             ax.axis('off')
             fig.savefig(os.path.join(path, 'operation{}.png'.format(i)))
             plt.close(fig)
+    '''

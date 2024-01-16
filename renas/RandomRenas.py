@@ -32,14 +32,14 @@ _RELATION_COST = {
     "type": 3.0,
     "enclosingCLass": 4.0,
     "assignment": 1.0,
-    "methodInvocated": 2.5,
+    "methodInvocated": 3.0,
     "parameterArgument": 2.0,
     "parameter": 3.0,
     "enclosingMethod": 3.0,
     "argument": 2.0, 
     "parameterOverload": 1.0
 }
-ratio = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+ratio = [i/20 for i in range(0, 21)]
 RANK = 50
 RANK_DISTANSE_PENALTY = 1
 RANK_WORD_PENALTY = 4
@@ -92,11 +92,6 @@ def polishJsonData(jsonData):
     )
     return
 
-def getRelatedIds(relationSeries):
-    relatedIds = set()
-    for ids in relationSeries:
-        relatedIds.update(id.rsplit(':', 1)[0] for id in ids.split(' - '))
-    return relatedIds
 
 def getRelatedIdsAndCost(relationSeries):
     relatedIds = set()
@@ -125,6 +120,7 @@ def recordOperation(commit, op,normalize, all, exception={}):
         operationDic[opType][commit] = {}
     operationDic[opType][commit][commit+op[0]] = op[1]
 
+
 # トリガーとなるRenameを設定.(operational chunkの抽出)
 def doCoRename(commit, tableData, trigger, relation, similarity, all):
     _logger.info(f'do co-rename relation = {relation}, similarity = {similarity}')
@@ -139,13 +135,6 @@ def doCoRename(commit, tableData, trigger, relation, similarity, all):
     return coRenameRelation(tableData, triggerData, triggerRename, relation, similarity)
 
 
-def coRenameNone(tableData, triggerRename):
-    tableDict = tableData.selectDataByColumns(_IDENTIFIER_LIST).to_dict(orient='records')
-    recommends = [triggerRename.coRename(deepcopy(d)) for d in tableDict]
-    result = [r for r in recommends if r is not None]
-    return result
-
-
 def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimilarity):
     triedIds = set()
     triggerScore = 0
@@ -155,14 +144,11 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
     result = []
     trueRecommend = 0
     trueRecommendScore = RANK
-    isNotAll = True
-    if isRelation and isSimilarity:
-        isNotAll = False
+
     # 4:30
     while len(nextIds) > 0:
         #調べるidを取得する 0.34  190779
         score, hop, searchId = heapq.heappop(nextIds)
-        #print(score, searchId)
         #0.0002   change  0.006   10894
         if searchId in triedIds:
             continue
@@ -178,20 +164,19 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
 
         #print(searchDataCopy["name"])  0.711  10894
         #0.00006
+        recommendScore = nextScore
         if searchDataCopy['id'] != triggerData['id']:
             recommended = triggerRename.coRename(searchDataCopy)
             if recommended is not None:
                 if isSimilarity:
-                    nextScore = nextScore + (recommended["similarity"] * SIMILARITY_TIMES)
-                if nextScore <= trueRecommendScore or trueRecommend < UPPER_RANKING:
-                    recommended['rank'] = nextScore
+                    recommendScore = nextScore + (recommended["similarity"] * SIMILARITY_TIMES)
+                if recommendScore <= trueRecommendScore or trueRecommend < UPPER_RANKING:
+                    recommended['relationship'] = nextScore
+                    recommended['rank'] = recommendScore
                     recommended['hop'] = hop
                     result.append(recommended)
                     trueRecommend += 1
-                if isSimilarity:
-                    nextScore = nextScore - (recommended["similarity"] * SIMILARITY_TIMES)
-#            else:
-#                nextScore += RANK_WORD_PENALTY
+
 
         #次に調べるべきidを格納 0.0007  change  14.90  6040
         #candidateIds, idCost = getRelatedIdsAndCost(searchData[_RELATION_LIST].dropna())
@@ -205,10 +190,6 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
             #0.0001  change  6040
             candidate = candidateData[ci]
             distanceCost = idCost[candidate['id']] * RELATION_TIMES if isRelation else 0
-            #if candidate['files'] != searchDataCopy["files"]:
-            #    if nextScore + RANK_FILE_PENALTY + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
-            #        heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY + distanceCost, hop+1, candidate['id']])
-            #else:
             if nextScore + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
                 heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate['id']])
 

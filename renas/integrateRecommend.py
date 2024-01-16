@@ -12,6 +12,7 @@ import argparse
 from multiprocessing import Pool
 from logging import getLogger, StreamHandler, Formatter, INFO, DEBUG, log
 import operator
+from copy import deepcopy
 
 from .util.ExTable import ExTable
 from datetime import datetime, date, timedelta
@@ -23,6 +24,8 @@ from .showRQFigure import showRQFigure
 
 _logger = getLogger(__name__)
 
+devideNumber = 20
+thresholdNumber = 100.0
 researchFileNames = {
                     "recommend_none.json": "None",
                     "recommend_relation_normalize.json": "Normalize",
@@ -113,8 +116,14 @@ def setRename(path, fileName):
 
 def setOperations(path, op):
     filePath = os.path.join(path, "operations.json")
+    operations = {}
     with open(filePath, 'r') as f:
-        operations = json.load(f)[op]
+        ops = json.load(f)[op]
+    for commit, gold in ops.items():
+        operations[commit] = {}
+        for k, o in gold.items():
+            key = re.sub(r'MethodName$|ClassName$|ParameterName$|VariableName$|FieldName$', '', k)
+            operations[commit][key] = o
     return operations
 
 
@@ -134,7 +143,7 @@ def getCommitsInfo(commit):
     return researchCommits
 
 def getKey(dic):
-    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] + dic["typeOfIdentifier"]
+    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
 
 def checkMeaningful(operations):
     meaningful = ["insert", "delete", "replace"]
@@ -161,8 +170,10 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         goldset = renameInfo[c]
         for rDic in goldset:
             key = getKey(rDic)
+            #Todo: fix extracting parameter or variable using AST
             if key not in operations[c]:
-                print(f"something wrong {key}")
+                print(f"something wrong with {key}")
+                exit(1)
                 continue
             ops = operations[c][key]
             for op in ops:
@@ -181,6 +192,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         triggerKey = getKey(trigger)
         if triggerKey not in operations[commit]:
             print(f"something wrong {triggerKey}")
+
             continue
         triggerOp = operations[commit][triggerKey]
         triggerRec = recommendName[triggerKey]
@@ -198,10 +210,15 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
                     continue
                 rKeys.append(getKey(rDic))
                 renames.append(rDic)
-        if opIds == "All":
-            triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))
+        if opIds == "All" :
+            triggerRec = deepcopy(triggerRec)
+            for tr in triggerRec:
+                relationshipCost = (1.0 / tr["relationship"])
+                similarityCost = 1.0 - tr["similarity"]
+                tr["rank"] = (0.5 * similarityCost + (1.0 - 0.5) * relationshipCost) * thresholdNumber
+            triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'id'), reverse=True)
         if opIds == "Normalize":
-            triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'similarity', 'hop', 'sameFile', 'diffLine'))
+            triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'id'))
         if len(renames) < 1:
             #print(triggerOp)
             print("one rename is conducted")

@@ -32,7 +32,7 @@ _RELATION_COST = {
     "type": 3.0,
     "enclosingCLass": 4.0,
     "assignment": 1.0,
-    "methodInvocated": 2.5,
+    "methodInvocated": 3.0,
     "parameterArgument": 2.0,
     "parameter": 3.0,
     "enclosingMethod": 3.0,
@@ -306,24 +306,18 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
     isNotAll = True
     if isRelation and isSimilarity:
         isNotAll = False
-    if "ancestorResources" not in triggerData["id"]:
-        return
-    pathDict = {}
     # 4:30
     while len(nextIds) > 0:
         #調べるidを取得する 0.34  190779
         score, hop, searchId, a = heapq.heappop(nextIds)
 
-        if ((trueRecommendScore < score or isNotAll) and trueRecommend >= UPPER_RANKING) and isRelation :
-            break
+        #if ((trueRecommendScore < score or isNotAll) and trueRecommend >= UPPER_RANKING) and isRelation :
+        #    break
         #print(score, searchId)
         #0.0002   change  0.006   10894
         if searchId in triedIds:
             continue
         triedIds.add(searchId)
-
-        pathDict[searchId] = a
-
 
         #この処理がだいぶ重い0.003  18.85  10894
         searchData = tableData.selectDataById(searchId)
@@ -334,23 +328,23 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
 
         #print(searchDataCopy["name"])  0.711  10894
         #0.00006
+        recommendScore = nextScore
         if searchDataCopy['id'] != triggerData['id']:
             recommended = triggerRename.coRename(searchDataCopy)
             if recommended is not None:
                 if isSimilarity:
-                    nextScore = nextScore + (recommended["similarity"] * SIMILARITY_TIMES)
-                if nextScore <= trueRecommendScore or trueRecommend < UPPER_RANKING:
-                    recommended['rank'] = nextScore
-                    recommended['hop'] = hop
-                    result.append(recommended)
-                    trueRecommend += 1
-                if isSimilarity:
-                    nextScore = nextScore - (recommended["similarity"] * SIMILARITY_TIMES)
+                    recommendScore = nextScore + (recommended["similarity"] * SIMILARITY_TIMES)
+                #if recommendScore <= trueRecommendScore or trueRecommend < UPPER_RANKING:
+                recommended['rank'] = recommendScore
+                recommended['relationship'] = nextScore
+                recommended['hop'] = hop
+                result.append(recommended)
+                trueRecommend += 1
 #            else:
 #                nextScore += RANK_WORD_PENALTY
 
-        if ((nextScore > trueRecommendScore or isNotAll) and trueRecommend >= UPPER_RANKING) and isRelation :
-            break
+        #if ((nextScore > trueRecommendScore or isNotAll) and trueRecommend >= UPPER_RANKING) and isRelation :
+        #    break
         #次に調べるべきidを格納 0.0007  change  14.90  6040
         #candidateIds, idCost = getRelatedIdsAndCost(searchData[_RELATION_LIST].dropna())
         candidateIds, idCost = getRelatedIdsAndCostTemp(searchData)
@@ -368,10 +362,9 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
             #    if nextScore + RANK_FILE_PENALTY + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
             #        heapq.heappush(nextIds, [nextScore + RANK_FILE_PENALTY + distanceCost, hop+1, candidate['id']])
             #else:
-            if nextScore + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
-                heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate['id'], searchData['id']])
+            #if nextScore + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
+            heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate['id'], searchData['id']])
 
-    print(pathDict["Lorg/restlet/ext/jaxrs/internal/core/CallContext;"])
     print(f'triedID = {len(triedIds)}')
     print(f'debug: nextIDs = {len(nextIds)}')
     print(f'debug: countRecommend = {trueRecommend}')

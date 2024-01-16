@@ -19,11 +19,14 @@ from copy import deepcopy
 
 _logger = getLogger(__name__)
 _logger.setLevel(DEBUG)
-ratio = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-MERGE_COST = {f"All{i}" :[[0, 0, 0] for i in range(50)] for i in ratio}
+devideNumber = 20
+thresholdNumber = 100
+TOPN = 20
+ratio = [i/devideNumber for i in range(0, devideNumber+1)]
+MERGE_COST = {f"All{i}" :[[0, 0, 0] for i in range(thresholdNumber + 1)] for i in ratio}
 MERGE_MAP = {f"All{i}" :0 for i in ratio}
 MERGE_MRR = {f"All{i}" :0 for i in ratio}
-COST = 50
+MERGE_TOPN = {f"All{i}" :[[0, 0, 0] for i in range(TOPN)] for i in ratio}
 
 #コマンドライン引数処理
 def setArgument():
@@ -46,7 +49,7 @@ def setLogger(level):
     return root_logger
 
 def updateMergeCost(costs, name):
-    for c in range(COST):
+    for c in range(thresholdNumber + 1):
         values = eval(costs[c])
         precision = values[0]
         recall = values[1]
@@ -61,8 +64,18 @@ def updateMapMrr(mapMrr, name):
     MERGE_MAP[name] += float(mapValue)
     MERGE_MRR[name] += float(mrrValue)
 
+def updateTopN(topN, name):
+    for c in range(TOPN):
+        values = eval(topN[c])
+        precision = values[0]
+        recall = values[1]
+        fscore = values[2]
+        MERGE_TOPN[name][c][0] += precision
+        MERGE_TOPN[name][c][1] += recall
+        MERGE_TOPN[name][c][2] += fscore
+
 def registerValue(repo):
-    colRange = range(100)
+    colRange = range(105)
     repo = pathlib.Path(repo)
     dataPath = repo.joinpath(repo, "randomRanking", "figure", "figData.csv")
     if not os.path.isfile(dataPath):
@@ -79,19 +92,24 @@ def registerValue(repo):
         MapMrrIndex = i+6
         updateMergeCost(df[costIndex], df[nameIndex][0])
         updateMapMrr(df[MapMrrIndex], df[nameIndex][0])
+        updateTopN(df[topNIndex], df[nameIndex][0])
 
 
 def showCostFigure(path, fileLength):
     colors = ["red", "green", "gold"]
     columns = ["Precision", "Recall", "Fscore"]
-    leftValue = np.array([i+1 for i in range(COST)])
+    leftValue = np.array([i / thresholdNumber for i in range(thresholdNumber + 1)])
+
     for fl in MERGE_COST.keys():
         costData = np.array(MERGE_COST[fl])
         for i in range(len(columns)):
             col = columns[i]
             data = costData[:, i] / fileLength
+            if i == 2 and fl == "All0.5":
+                print([f"{i}: {k}"for i, k in enumerate(data)])
             fig, ax = plt.subplots()
             plt.plot(leftValue, data, color=colors[i])
+            plt.xlim(0,1)
             plt.xlabel('優先度閾値')
             plt.ylabel('Fscore')
             fig.savefig(os.path.join(path, 'mergeCost{}{}.pdf'.format(fl, col)))
@@ -116,12 +134,52 @@ def caluculateCostValues(fileLength, path):
     left = [i for i in ratio]
     fig, ax = plt.subplots()
 
-    p1 = ax.bar(left, list(maxFscoreList.values()), color='b')
-    #ax.bar_label(p1, label_type='edge')]
+    p1 = plt.plot(left, list(maxFscoreList.values()), color='b')
+    #p1 = ax.bar(left, list(maxFscoreList.values()), color='b')
+    #ax.bar_label(p1, label_type='edge')
     plt.xlabel('α')
     plt.ylabel('Fscore')
     plt.savefig(os.path.join(path, 'costBar.pdf'))  
-    plt.show()
+    #plt.show()
+
+def showMAPMRRFigure(fileLength, path):
+    valueMAPList = [v / fileLength for v in MERGE_MAP.values()]
+    valueMRRList = [v / fileLength for v in MERGE_MRR.values()]
+    xAxisValue = ratio
+
+    #MAP
+    fig, ax = plt.subplots()
+    plt.plot(xAxisValue, valueMAPList)
+    plt.xlabel('α')
+    plt.ylabel('MAP')
+    #plt.ylim(0, max(valueMAPList)+0.08)
+    fig.savefig(os.path.join(path, 'mergeMAP.pdf'))
+    plt.close(fig) 
+
+    #MRR
+    fig, ax = plt.subplots()
+    plt.plot(xAxisValue, valueMRRList)
+    plt.xlabel('α')
+    plt.ylabel('MRR')
+    #plt.ylim(0, max(valueMRRList)+0.08)
+    fig.savefig(os.path.join(path, 'mergeMRR.pdf'))
+    plt.close(fig)  
+
+def showTopNFigure(fileLength, path):
+    columns = ["Precision", "Recall", "Fscore"]
+    colors = ["red", "green", "gold"]
+    leftValue = np.array([i+1 for i in range(TOPN)])
+    for o in MERGE_TOPN.keys():
+        for i in range(len(columns)):
+            col = columns[i]
+            data = np.array(MERGE_TOPN[o])[:, i] / fileLength
+            fig, ax = plt.subplots()
+            p1 = ax.bar(leftValue, data, color=colors[i])
+            plt.ylabel('{}'.format(i))
+            plt.xlabel('topN')
+            fig.savefig(os.path.join(path, 'topN{}{}.png'.format(col, o)))
+            plt.close(fig)
+
 
 if __name__ == '__main__':
     mainArgs = setArgument()
@@ -136,5 +194,7 @@ if __name__ == '__main__':
     fileLength = len(mainArgs.source)
     showCostFigure(resultPath, fileLength)
     caluculateCostValues(fileLength, resultPath)
+    showMAPMRRFigure(fileLength, resultPath)
+    showTopNFigure(fileLength, resultPath)
     print([(i, v / fileLength) for i, v in MERGE_MAP.items()])
     print([(i, v / fileLength) for i, v in MERGE_MRR.items()])

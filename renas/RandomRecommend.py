@@ -23,7 +23,9 @@ import statistics
 from .showRandomFigure import showRandomFigure
 
 _logger = getLogger(__name__)
-ratio = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25]
+devideNumber = 20
+thresholdNumber = 100.0
+ratio = [i/devideNumber for i in range(0, devideNumber+1)]
 researchFileNames = {f"{i}": f"All{i}" for i in ratio}
 detail_info = [['triggerCommit', 'file', 'line', 'triggeroldname', 'triggernewname', 'op',
                 'commitPool', 'researchCommit', 'file', 'line', 'oldname' ,'truename', 'recommendname']]
@@ -33,8 +35,8 @@ allPrecision = {op: [] for op in researchFileNames.values()}
 allRecall = {op: [] for op in researchFileNames.values()}
 allFscore = {op: [] for op in researchFileNames.values()}
 TOPN = 20
-COST = 50
-rankTrueRecommend = [[0, 0] for _ in range(COST)]
+#COST = 50
+#rankTrueRecommend = [[0, 0] for _ in range(COST)]
 
 gitRe = re.compile(r'(?:^commit)\s+(.+)\nAuthor:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
 numberToCommit = {}
@@ -44,7 +46,7 @@ commitToDate = {}
 motivationExample = {"Normalize":{}, "All":{}, "Relation":{}, "None":{}}
 
 missOperation = {op: {"insert": [0, 0, 0], "delete": [0, 0, 0], "replace": [0, 0, 0], "order": [0, 0, 0], "format": [0, 0, 0], "changeCase": [0, 0, 0], "changePattern": [0, 0, 0]} for op in researchFileNames.values()}
-_showRandomFigure = showRandomFigure(TOPN, COST)
+_showRandomFigure = showRandomFigure(TOPN)
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -108,8 +110,14 @@ def setRename(path, fileName):
 
 def setOperations(path, op):
     filePath = os.path.join(path, "operations.json")
+    operations = {}
     with open(filePath, 'r') as f:
-        operations = json.load(f)[op]
+        ops = json.load(f)[op]
+    for commit, gold in ops.items():
+        operations[commit] = {}
+        for k, o in gold.items():
+            key = re.sub(r'MethodName$|ClassName$|ParameterName$|VariableName$|FieldName$', '', k)
+            operations[commit][key] = o
     return operations
 
 
@@ -121,7 +129,7 @@ def getCommitsInfo(commit):
     return researchCommits
 
 def getKey(dic):
-    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] + dic["typeOfIdentifier"]
+    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] 
 
 def checkMeaningful(operations):
     meaningful = ["insert", "delete", "replace"]
@@ -131,7 +139,6 @@ def checkMeaningful(operations):
         if op[0] == "format":
             if op[1][0] == "Plural":
                 return False
-    print(operations)
     return True
 
 def recommendCommit(commit, tableData, operations, recommendName, renameInfo, opIds, ra):
@@ -149,7 +156,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         for rDic in goldset:
             key = getKey(rDic)
             if key not in operations[c]:
-                print(f"something wrong {key}")
+                print(f"something wrong with {key}")
                 continue
             ops = operations[c][key]
             for op in ops:
@@ -194,12 +201,14 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
 
         triggerRec = deepcopy(triggerRecommend)
         for tr in triggerRec:
-            tr["rank"] = tr["rank"] + tr["similarity"] * (ra - 1)
-            #print(tr["rank"], tr["similarity"], ra)
-        triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'id'))
+            relationshipCost = (1.0 / (tr["relationship"]))
+            similarityCost = 1.0 - tr["similarity"]
+            tr["rank"] = (ra * similarityCost + (1.0 - ra) * relationshipCost) * thresholdNumber
+
+        triggerRec = sorted(triggerRec, key=operator.itemgetter('rank', 'id'), reverse=True)
         if len(renames) < 1:
             #print(triggerOp)
-            print("one rename is conducted")
+            #print("one rename is conducted")
             trueRecommendIndex = []
             precision = 0
             recall = 0
@@ -207,7 +216,7 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
             fscore = 0
             continue
         elif len(triggerRec) == 0:
-            print("No recommend")
+            #print("No recommend")
             trueRecommendIndex = []
             precision = 0
             recall = 0
@@ -234,12 +243,12 @@ def recommendCommit(commit, tableData, operations, recommendName, renameInfo, op
         allPrecision[opIds].append(precision)
         allRecall[opIds].append(recall)
         allFscore[opIds].append(fscore)
-        #addRankRecommend(triggerRec, opIds)
         setMissOperation(opIds, triggerOp, len(renames), len(triggerRec), len(trueRecommendIndex))
         setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, opIds)
-        print(f"operation chunk = {triggerOp}")
-        print(f"precision = {precision},  recall = {recall},\
-               exact = {exacts}, fscore = {fscore} ")
+        #print(f"operation chunk = {triggerOp}")
+        #print(f"precision = {precision},  recall = {recall},\
+        #       exact = {exacts}, fscore = {fscore} ")
+        #print(ra)
         _showRandomFigure.update(trigger, triggerRec, renames, trueRecommendIndex, opIds)
     
     if opIds in motivationExample:
@@ -258,11 +267,6 @@ def setMissOperation(opId, setOp, reNum, trigNum, trueNum):
         operation = op[0]
         a, b, c = missOperation[opId][operation]
         missOperation[opId][operation] = [a + reNum, b + trigNum, c + trueNum]
-
-def addRankRecommend(recommendations, op):
-    for rec in recommendations:
-        if op == "All":
-            rankTrueRecommend[rec["rank"]-1][1] += 1
 
 
 def setDetail(commit, trigger, triggerOp, triggerRec, renames, tableData, op):
@@ -367,7 +371,8 @@ if __name__ ==  "__main__":
     mecCSV = os.path.join(evalRankingPath,'motivationExampleCandidate.csv') 
     allCSV = os.path.join(evalRankingPath,'all.csv') 
     operations = setOperations(args.source, "all")
-    recommendName, renameInfo = setRename(args.source, "recommend_all_normalize_random.json")
+    #recommendName, renameInfo = setRename(args.source, "recommend_all_normalize_random.json")
+    recommendName, renameInfo = setRename(args.source, "recommend_all_normalize.json")
 
     for fileName, op in researchFileNames.items():
         print(op)
@@ -387,9 +392,9 @@ if __name__ ==  "__main__":
             #tableData = ExTable(tablePath)
             tableData = None
             if fileName == "recommend_none.json":
-                countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, int(fileName))
+                countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, float(fileName))
             else:
-                countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, int(fileName))
+                countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, float(fileName))
             allRename += countRename
             allRec += countRec
             allTrue += countTrue
