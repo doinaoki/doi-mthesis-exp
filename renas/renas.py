@@ -115,7 +115,7 @@ def recordOperation(commit, op,normalize, all, exception={}):
     else:
         opType = "None"
     if len(exception) != 0:
-        key = exception["commit"]+exception["files"]+str(exception["line"])+exception["oldname"]+exception["typeOfIdentifier"]
+        key = exception["commit"]+exception["files"]+str(exception["line"])+exception["oldname"]
         if commit not in operationDic[opType]:
             operationDic[opType][commit] = {}
         operationDic[opType][commit][key] = []

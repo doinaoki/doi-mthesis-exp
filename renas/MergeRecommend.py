@@ -61,6 +61,22 @@ def updateMergeCost(costs, name):
         MERGE_COST[name][c][1] += recall
         MERGE_COST[name][c][2] += fscore
 
+        if c == 0 and name != "All":
+            print(f"{name}: {precision}, {recall}, {fscore}")
+        if c == 53 and name == "All":
+            print(f"{name}: {precision}, {recall}, {fscore}\n")
+
+def updateMergeTopN(topNData):
+    #print(topNData)
+    for i in range(TOPN):
+        values = eval(topNData[i])
+        precision = values[0]
+        recall = values[1]
+        fscore = values[2]
+        MERGE_TOPN[i][0] += precision
+        MERGE_TOPN[i][1] += recall
+        MERGE_TOPN[i][2] += fscore
+
 
 def registerValue(repo):
     colRange = range(105)
@@ -76,8 +92,10 @@ def registerValue(repo):
         hopIndex = i+2
         costIndex = i+3
         typeIndex = i+4
-
         updateMergeCost(df[costIndex], df[nameIndex][0])
+    topNIndex = 5*len(researchFileNames) + 1
+    updateMergeTopN(df[topNIndex])
+
 
 
 def showCostFigure(path, fileLength):
@@ -93,23 +111,46 @@ def showCostFigure(path, fileLength):
             else:
                 data = costData[:, i] / fileLength
             fig, ax = plt.subplots()
+            maxIndex = np.argmax(data)
+            maxValue = data[maxIndex]
+            print(maxIndex / thresholdNumber, maxValue)
             plt.plot(leftValue, data, color=colors[i])
+            plt.plot(maxIndex / thresholdNumber, maxValue, '.', markersize=7, color='b')
+            plt.text(maxIndex / thresholdNumber, maxValue, round(maxValue, 3))
             plt.xlim(0,1)
             plt.xlabel('優先度閾値')
             plt.ylabel('Fscore')
-            fig.savefig(os.path.join(path, 'mergeCost{}{}.pdf'.format(fl, col)))
-            plt.close(fig)        
+            plt.savefig(os.path.join(path, 'mergeCost{}{}.pdf'.format(fl, col)))
+            plt.close(fig)
+    
 
+def printCost(num, fileLength):
+    for fl in MERGE_COST.keys():
+        costData = np.array(MERGE_COST[fl]) / fileLength
+        if fl != "All":
+            print(fl, costData[0])
+        else:
+            print(costData[num])
+
+def printTopN(fileLength):
+    displayNumber = [1, 5, 10]
+    for i in range(TOPN):
+        if i in displayNumber:
+            print(f"top-{i}-recall: {MERGE_TOPN[i-1][1] / fileLength}")
 
 if __name__ == '__main__':
     mainArgs = setArgument()
     rootLogger = setLogger(DEBUG if mainArgs.d else INFO)
 
     for repo in mainArgs.source:
+        print(repo)
         registerValue(repo)
 
     resultPath =  pathlib.Path(mainArgs.source[0]).parent.joinpath("Merge")
     if not os.path.isdir(resultPath):
         os.makedirs(resultPath, exist_ok=True)
     fileLength = len(mainArgs.source)
+    printTopN(fileLength)
+    printCost(53, fileLength)
     showCostFigure(resultPath, fileLength)
+    

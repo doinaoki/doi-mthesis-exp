@@ -65,8 +65,8 @@ def filterData(data):
     filter = map(__containAbbr, data['oldname'], data['newname'])
     filtered = data[pd.Series(filter)]
     commits = filtered.groupby('commit').size()
+    commits = commits[commits > 1]
     #commits = commits[commits > 1]
-    commits = commits[commits > 3]
     #LOGGER.info(f'{len(commits)} commits may contain abbreviation rename')
     LOGGER.info(f'total {commits.sum()} renames')
     #commits = commits.sample(frac=0.1, random_state=0)
@@ -80,7 +80,7 @@ def __containAbbr(oldName, newName):
 def gitArchive(root, directory, sha1):
     try:
         LOGGER.info(f'[{os.getpid()}] {directory}: archive commit {sha1}^')
-        archiveDir = directory.joinpath(sha1).joinpath('record.json')
+        archiveDir = directory.joinpath(sha1).joinpath('repo')
         # os.path.join(os.path.join(directory, sha1), 'repo')
         if os.path.isfile(archiveDir):
             LOGGER.info(f'[{os.getpid()}] {archiveDir} already exists')
@@ -101,7 +101,7 @@ def gitArchive(root, directory, sha1):
 
 def doTable(root, directory, sha1):
     try:
-        archiveDir = directory.joinpath(sha1)
+        archiveDir = directory.joinpath(sha1).joinpath("record.json")
         if not os.path.isdir(archiveDir):
             print(f"{archiveDir} is not existed")
             exit(1)

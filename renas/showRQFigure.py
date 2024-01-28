@@ -139,7 +139,7 @@ class showRQFigure:
                 print(f"{v['recall_10']}, {pr}, {v['P_10']}, {pp}")
                 print(trueRecommendIndex)
                 print(topNCount)
-                print("precision 5 error")
+                print("precision 10 error")
                 exit(1)
 
             if abs(v["map"] - Map) >= 10**(-4)  or abs(v["recip_rank"] - Mrr) >= 10**(-4):

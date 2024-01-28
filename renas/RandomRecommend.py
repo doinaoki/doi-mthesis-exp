@@ -108,6 +108,7 @@ def setRename(path, fileName):
     return recommendName, renameInfo
 
 
+'''
 def setOperations(path, op):
     filePath = os.path.join(path, "operations.json")
     operations = {}
@@ -118,6 +119,13 @@ def setOperations(path, op):
         for k, o in gold.items():
             key = re.sub(r'MethodName$|ClassName$|ParameterName$|VariableName$|FieldName$', '', k)
             operations[commit][key] = o
+    return operations
+'''
+def setOperations(path, op):
+    filePath = os.path.join(path, "operations.json")
+    operations = {}
+    with open(filePath, 'r') as f:
+        operations = json.load(f)[op]
     return operations
 
 
@@ -388,7 +396,7 @@ if __name__ ==  "__main__":
             if commit not in commitToDate:
                 continue
             #print(commit)
-            tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
+            #tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
             #tableData = ExTable(tablePath)
             tableData = None
             if fileName == "recommend_none.json":

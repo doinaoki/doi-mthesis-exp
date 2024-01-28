@@ -111,7 +111,7 @@ def recordOperation(commit, op,normalize, all, exception={}):
     else:
         opType = "None"
     if len(exception) != 0:
-        key = exception["commit"]+exception["files"]+str(exception["line"])+exception["oldname"]+exception["typeOfIdentifier"]
+        key = exception["commit"]+exception["files"]+str(exception["line"])+exception["oldname"]
         if commit not in operationDic[opType]:
             operationDic[opType][commit] = {}
         operationDic[opType][commit][key] = []
@@ -190,8 +190,7 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
             #0.0001  change  6040
             candidate = candidateData[ci]
             distanceCost = idCost[candidate['id']] * RELATION_TIMES if isRelation else 0
-            if nextScore + distanceCost <= trueRecommendScore or trueRecommend < UPPER_RANKING:
-                heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate['id']])
+            heapq.heappush(nextIds, [nextScore + distanceCost, hop+1, candidate['id']])
 
 
     print(f'triedID = {len(triedIds)}')

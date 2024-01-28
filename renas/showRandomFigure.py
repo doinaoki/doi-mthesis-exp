@@ -106,7 +106,7 @@ class showRandomFigure:
         fscore = self.calcFscore(precision, recall)
 
         self.updateTopNData(topNCount, renamesLength, recommendsLength, option)
-        self.updateOperationData(triggerRename, precision, recall, fscore, option)
+        #self.updateOperationData(triggerRename, precision, recall, fscore, option)
         self.updateHopData(hopAllCount, hopCount, renamesLength, recommendsLength, option)
         self.updateCostData(costAllCount, costCount, renamesLength, recommendsLength, option)
         self.updateTypeData(typeAllCount, typeCount, triggerRename, recommendsLength, option)

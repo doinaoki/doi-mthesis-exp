@@ -63,7 +63,7 @@ if __name__ == "__main__":
         print("error: repo is not existed")
         exit(1)
     # ここを変えると出力されるより細かくファイルを分けてrefactoring
-    ratio = 30
+    ratio = 3
     commitLength = len(COMMIT)
     for rMinerNumber in range(ratio):
         count = 0

@@ -152,6 +152,11 @@ def showMAPMRRFigure(fileLength, path):
     plt.plot(xAxisValue, valueMAPList)
     plt.xlabel('α')
     plt.ylabel('MAP')
+    maxIndex = np.argmax(valueMAPList)
+    maxValue = valueMAPList[maxIndex]
+    #print(maxIndex / len(ratio), maxValue)
+    plt.plot(maxIndex / (len(ratio) - 1), maxValue, '.', markersize=7, color='r')
+    plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
     #plt.ylim(0, max(valueMAPList)+0.08)
     fig.savefig(os.path.join(path, 'mergeMAP.pdf'))
     plt.close(fig) 
@@ -161,6 +166,11 @@ def showMAPMRRFigure(fileLength, path):
     plt.plot(xAxisValue, valueMRRList)
     plt.xlabel('α')
     plt.ylabel('MRR')
+    maxIndex = np.argmax(valueMRRList)
+    maxValue = valueMRRList[maxIndex]
+    #print(maxIndex / len(ratio), maxValue)
+    plt.plot(maxIndex / (len(ratio) - 1), maxValue, '.', markersize=7, color='r')
+    plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
     #plt.ylim(0, max(valueMRRList)+0.08)
     fig.savefig(os.path.join(path, 'mergeMRR.pdf'))
     plt.close(fig)  
@@ -169,6 +179,9 @@ def showTopNFigure(fileLength, path):
     columns = ["Precision", "Recall", "Fscore"]
     colors = ["red", "green", "gold"]
     leftValue = np.array([i+1 for i in range(TOPN)])
+    top1Recall = {f"All{i}": 0 for i in ratio}
+    top5Recall = {f"All{i}": 0 for i in ratio}
+    top10Recall = {f"All{i}": 0 for i in ratio}
     for o in MERGE_TOPN.keys():
         for i in range(len(columns)):
             col = columns[i]
@@ -180,6 +193,55 @@ def showTopNFigure(fileLength, path):
             fig.savefig(os.path.join(path, 'topN{}{}.png'.format(col, o)))
             plt.close(fig)
 
+            if i == 1:
+                top1Recall[o] = data[0]
+                top5Recall[o] = data[4]
+                top10Recall[o] = data[9]
+                #print(f"{o}\n top1:{data[0]}\n top5:{data[4]}\n top10:{data[9]}")
+    fig, ax = plt.subplots()
+    p1 = ax.plot(ratio, list(top1Recall.values()))
+    plt.ylabel('top1Recall')
+    plt.xlabel('α')
+    maxIndex = np.argmax(list(top1Recall.values()))
+    maxValue = list(top1Recall.values())[maxIndex]
+    #print(maxIndex / len(ratio), maxValue)
+    plt.plot(maxIndex / (len(ratio) - 1), maxValue, '.', markersize=7, color='r')
+    plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
+    fig.savefig(os.path.join(path, 'top1Recall.pdf'))
+    plt.close(fig)
+
+    fig, ax = plt.subplots()
+    p1 = ax.plot(ratio, list(top5Recall.values()))
+    plt.ylabel('top5Recall')
+    plt.xlabel('α')
+    maxIndex = np.argmax(list(top5Recall.values()))
+    maxValue = list(top5Recall.values())[maxIndex]
+    #print(maxIndex / len(ratio), maxValue)
+    plt.plot(maxIndex / (len(ratio) - 1), maxValue, '.', markersize=7, color='r')
+    plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
+    fig.savefig(os.path.join(path, 'top5Recall.pdf'))
+    plt.close(fig)
+
+    fig, ax = plt.subplots()
+    p1 = ax.plot(ratio, list(top10Recall.values()))
+    plt.ylabel('top10Recall')
+    plt.xlabel('α')
+    maxIndex = np.argmax(list(top10Recall.values()))
+    maxValue = list(top10Recall.values())[maxIndex]
+    #print(maxIndex / len(ratio), maxValue)
+    plt.plot(maxIndex / (len(ratio) - 1), maxValue, '.', markersize=7, color='r')
+    plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
+    fig.savefig(os.path.join(path, 'top10Recall.pdf'))
+    plt.close(fig)
+
+    print(top1Recall["All0.0"], top1Recall["All1.0"])
+    print(top5Recall["All0.0"], top5Recall["All1.0"])
+    print(top10Recall["All0.0"], top10Recall["All1.0"])
+    print(top1Recall, top1Recall)
+    print(top5Recall, top5Recall)
+    print(top10Recall, top10Recall)
+
+
 
 if __name__ == '__main__':
     mainArgs = setArgument()
@@ -188,13 +250,13 @@ if __name__ == '__main__':
     for repo in mainArgs.source:
         registerValue(repo)
 
-    resultPath =  pathlib.Path(mainArgs.source[0]).parent.joinpath("randomMerge")
+    resultPath =  pathlib.Path(mainArgs.source[0]).parent.joinpath("RQ2Merge")
     if not os.path.isdir(resultPath):
         os.makedirs(resultPath, exist_ok=True)
     fileLength = len(mainArgs.source)
-    showCostFigure(resultPath, fileLength)
-    caluculateCostValues(fileLength, resultPath)
-    showMAPMRRFigure(fileLength, resultPath)
+    #showCostFigure(resultPath, fileLength)
+    #caluculateCostValues(fileLength, resultPath)
+    #showMAPMRRFigure(fileLength, resultPath)
     showTopNFigure(fileLength, resultPath)
     print([(i, v / fileLength) for i, v in MERGE_MAP.items()])
     print([(i, v / fileLength) for i, v in MERGE_MRR.items()])

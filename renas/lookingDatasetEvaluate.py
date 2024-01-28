@@ -16,6 +16,7 @@ from copy import deepcopy
 from .util.Rename import Rename
 import operator
 from .showRQFigure import showRQFigure
+from .showRandomFigure import showRandomFigure
 
 researchFileNames = {
                     "recommend_none.json": "None",
@@ -29,10 +30,14 @@ allFscore = {op: [] for op in researchFileNames.values()}
 detail_info = [['triggerCommit', 'file', 'line', 'type', 'triggeroldname', 'triggernewname',
                 'file', 'line', 'type', 'oldname' ,'truename', 'recommendname']]
 
+devideNumber = 20
+thresholdNumber = 100.0
+ratio = [i/devideNumber for i in range(0, devideNumber+1)]
 result_info = []
 topN = 20
 maxCost = 25
 _showRQFigure = showRQFigure(topN, maxCost)
+_showRandomFigure = showRandomFigure(topN)
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -50,7 +55,7 @@ def setOperations(path):
     return operations
 
 def getKey(dic):
-    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"] + dic["typeOfIdentifier"]
+    return dic["commit"] + dic["files"] + str(dic["line"]) + dic["oldname"]
 
 
 def setRename(path, fileName):
@@ -125,20 +130,29 @@ def detail(triggerRename, renames, recommend, op):
             detail_info.append([triggerRename["commit"], triggerRename["files"], triggerRename["line"], triggerRename["typeOfIdentifier"], triggerRename["oldname"], triggerRename["newName"], 
                                 recommend[r]["files"], recommend[r]["line"], recommend[r]["typeOfIdentifier"], recommend[r]["name"], "NAN", recommend[r]["join"], recommend[r]["rank"]])
 
-def evaluate(triggerRename, renames, recommend, op):
-    triggerKey = getKey(triggerRename)
-    correct = 0
-    result = []
+def evaluate(triggerRename, ren, recommend, op):
+    renames = []
     triedkey = set()
-    for re in range(len(renames)):
-        rename = renames[re]
-
-        key = getKey(rename)
+    triggerKey = getKey(triggerRename)
+    for r in ren:
+        key = getKey(r)
         if triggerKey == key:
             continue
         if key in triedkey:
             continue
+        renames.append(r)
         triedkey.add(key)
+    
+    if len(renames) == 0:
+        return
+
+    correct = 0
+    result = []
+
+    for re in range(len(renames)):
+        rename = renames[re]
+
+        key = getKey(rename)
         sameKey = str(rename["line"]) + rename["typeOfIdentifier"] + rename["oldname"] + rename["files"]
         for r in range(len(recommend)):
             rec = recommend[r]
@@ -148,13 +162,60 @@ def evaluate(triggerRename, renames, recommend, op):
                 result.append([re, r])
                 break
     precision = correct / len(recommend) if len(recommend) != 0 else 0
-    recall = correct / (len(renames) - 1)
+    recall = correct / len(renames)
     fscore = 2 * precision * recall / (precision + recall) if correct != 0 else 0
     allPrecision[op].append(precision)
     allRecall[op].append(recall)
     allFscore[op].append(fscore)
     print(triggerRename["commit"], result)
     _showRQFigure.update(triggerRename, recommend, renames, result, op)
+
+
+def randomEvaluate(triggerRename, ren, rawRecommend, op):
+    renames = []
+    triedkey = set()
+    triggerKey = getKey(triggerRename)
+    for r in ren:
+        key = getKey(r)
+        if triggerKey == key:
+            continue
+        if key in triedkey:
+            continue
+        renames.append(r)
+        triedkey.add(key)
+    
+    if len(renames) == 0:
+        return
+
+    for ra in ratio:
+        rec = deepcopy(rawRecommend)
+        for tr in rec:
+            relationshipCost = (1.0 / tr["relationship"])
+            similarityCost = 1.0 - tr["similarity"]
+            tr["rank"] = (ra * similarityCost + (1.0 - ra) * relationshipCost) * thresholdNumber
+        recommend = sorted(rec, key=operator.itemgetter('rank', 'id'), reverse=True)
+        correct = 0
+        result = []
+        triedkey = set()
+        for re in range(len(renames)):
+            rename = renames[re]
+            sameKey = str(rename["line"]) + rename["typeOfIdentifier"] + rename["oldname"] + rename["files"]
+            for r in range(len(recommend)):
+                rec = recommend[r]
+                recKey = str(rec["line"]) + rec["typeOfIdentifier"] + rec["name"] + rec["files"]
+                if sameKey == recKey:
+                    correct += 1
+                    result.append([re, r])
+                    break
+        precision = correct / len(recommend) if len(recommend) != 0 else 0
+        recall = correct / len(renames)
+        fscore = 2 * precision * recall / (precision + recall) if correct != 0 else 0
+        allPrecision[op].append(precision)
+        allRecall[op].append(recall)
+        allFscore[op].append(fscore)
+        #print(triggerRename["commit"], result)
+        _showRandomFigure.update(triggerRename, recommend, renames, result, f"All{ra}")
+
 
 def changeTypeName(typeOfIdentifier):
     if typeOfIdentifier == "Parameter":
@@ -195,7 +256,7 @@ for i, row in datalooking.iterrows():
     file = row["file"]
     line = row["line"]
     
-    if coRename == -1 or conceptRename == "FALSE":
+    if coRename == -1 or conceptRename != "TRUE":
         continue
 
     if commit not in coRenameGroup:
@@ -207,9 +268,18 @@ for i, row in datalooking.iterrows():
     data = {"oldname": oldName, "newName": newName, "Operation": operation, "coRename": coRename, "commitdate": commitDate,
              "commit": commit, "typeOfIdentifier": typeOfIdentifier, "files": file, "line": line}
     coRenameGroup[commit][coRename].append(data)
-
+'''
+c = 0
+d = 0
+for i in coRenameGroup:
+    for k in coRenameGroup[i]:
+        if len(coRenameGroup[i][k]) >= 2:
+            c += len(coRenameGroup[i][k])
+            d += 1
+print(c, d)
+exit(0)
+'''
 for fileName, op in researchFileNames.items():
-
     recommendName, renameInfo = setRename(mainArgs.source[0], fileName)
     print(fileName)
 
@@ -220,8 +290,15 @@ for fileName, op in researchFileNames.items():
                 if key not in recommendName:
                     print(key)
                     continue
-                if op == "All" or op == "Normalize":
-                    recommend = sorted(recommendName[key], key=operator.itemgetter('rank', 'hop', 'sameFile', 'diffLine', 'id'))
+                if op == "All":
+                    recommend = deepcopy(recommendName[key])
+                    for tr in recommend:
+                        relationshipCost = (1.0 / tr["relationship"])
+                        similarityCost = 1.0 - tr["similarity"]
+                        tr["rank"] = (0.5 * similarityCost + (1.0 - 0.5) * relationshipCost) * thresholdNumber
+                    recommend = sorted(recommend, key=operator.itemgetter('rank', 'id'), reverse=True)
+                elif op == "Normalize":
+                    recommend = sorted(recommendName[key], key=operator.itemgetter('rank', 'id'))
                 else:
                     recommend = recommendName[key]
                 if len(renames) <= 1:
@@ -229,6 +306,8 @@ for fileName, op in researchFileNames.items():
                     continue
                 evaluate(triggerRename, renames, recommend, op)
                 detail(triggerRename, renames, recommend, op)
+                if op == "All":
+                    randomEvaluate(triggerRename, renames, recommend, op)
 
 if not os.path.isdir(resultRepo):
     os.mkdir(resultRepo)
@@ -266,5 +345,7 @@ with open(allCSV, 'w') as dCSV:
             w.writerow([i])
             w.writerow([0])
 _showRQFigure.calculateData()
+_showRandomFigure.calculateData()
 #_showRQFigure.showConsole()
 _showRQFigure.showFigure(resultRepo)
+_showRandomFigure.showFigure(resultRepo)

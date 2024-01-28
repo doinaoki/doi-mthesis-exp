@@ -47,7 +47,7 @@ class Rename:
         return self.__new
     
     def getOp(self):
-        return [self.__old["files"]+str(self.__old["line"])+self.__old["name"]+self.__old["typeOfIdentifier"], self.getDiff()]
+        return [self.__old["files"]+str(self.__old["line"])+self.__old["name"], self.getDiff()]
 
     def debugOperation(self, oldName, newName):
         global _abbrManager, _expandManager

@@ -15,6 +15,7 @@ import operator
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import shutil
 
 from .util.ExTable import ExTable
 from datetime import datetime, date, timedelta
@@ -22,7 +23,7 @@ import pandas as pd
 from .util.Name import KgExpanderSplitter
 from .util.Rename import Rename
 import statistics
-
+'''
 _logger = getLogger(__name__)
 
 def setArgument():
@@ -57,3 +58,33 @@ plt.ylabel('ratio')
 plt.xticks(index + bar_width, ["MAP", "MRR", "top1", "top5", "top10"])
 
 plt.savefig(os.path.join(args.source, "figure", "showRQ.png"), pad_inches = 0)
+
+'''
+
+
+def setArgument():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('source', help='set directory containing repositories to be analyzed')
+    parser.add_argument('-D', help='dry run (only check how many archives will be created)', action='store_true', default=False)
+    args = parser.parse_args()
+    return args
+
+args = setArgument()
+filePath = args.source
+archivePath = os.path.join(filePath, "archives")
+
+dirs = os.listdir(archivePath)
+dirsLength = len(dirs)
+c = 1
+for dir in dirs:
+    if dir[0] == '.':
+        continue
+    repoPath = os.path.join(archivePath, dir, "repo")
+    if not os.path.isdir(repoPath):
+        continue
+    print(f"{c} / {dirsLength}")
+    print(f"{repoPath} is deleted")
+    shutil.rmtree(repoPath)
+    c += 1
+
+

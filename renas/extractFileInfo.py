@@ -20,24 +20,22 @@ import pandas as pd
 from .util.Name import KgExpanderSplitter
 from .util.Rename import Rename
 import statistics
-from .showRandomFigure import showRandomFigure
+from .showRQFigure import showRQFigure
 
 _logger = getLogger(__name__)
-TOPN = 20
-COST = 50
-rankTrueRecommend = [[0, 0] for _ in range(COST)]
+
+researchFileNames = {
+                    "recommend_all_normalize.json": "All"}
 
 gitRe = re.compile(r'(?:^commit)\s+(.+)\nAuthor:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
-numberToCommit = {}
-dateToCommit = {}
-commitToNumber = {}
-commitToDate = {}
-SIMILARITIES = []
 
+sameRenameSetLength = [0 for _ in range(10)]
+researchTypeOfIdentifier = {i:0 for i in ["ParameterName", "ClassName", "MethodName", "VariableName", "FieldName"]}
+renameCount = 0
 
 def setArgument():
     parser = argparse.ArgumentParser()
-    parser.add_argument('source', help='set directory containing repositories to be analyzed')
+    parser.add_argument('source', help='set directory containing repositories to be analyzed', nargs='+')
     parser.add_argument('-D', help='dry run (only check how many archives will be created)', action='store_true', default=False)
     args = parser.parse_args()
     return args
@@ -60,18 +58,14 @@ def setGitlog(path):
     cp = subprocess.run(f"cd {repoPath}; git log",shell=True, stdout=subprocess.PIPE)
     gitLog = cp.stdout.decode('utf-8','ignore')
     gitInfo = gitRe.findall(gitLog)
-    num = len(gitInfo)-1
+    commitData = set()
     for info in gitInfo:
         commit = info[0]
+        author = info[1]
         dateInfo = datetime.strptime(info[2], '%a %b %d %H:%M:%S %Y %z')
-        commitToDate[commit] = dateInfo
-        dateToCommit[dateInfo]= commit
-
-        numberToCommit[num] = commit
-        commitToNumber[commit] = num
-        num -= 1
+        commitData.add(commit)
     
-    return True
+    return commitData
 
 
 def setRename(path, fileName):
@@ -94,16 +88,6 @@ def setRename(path, fileName):
 
     return recommendName, renameInfo
 
-
-'''
-def setOperations(path, op):
-    filePath = os.path.join(path, "operations.json")
-    with open(filePath, 'r') as f:
-        operations = json.load(f)[op]
-
-    return operations
-'''
-
 def setOperations(path, op):
     filePath = os.path.join(path, "operations.json")
     operations = {}
@@ -115,6 +99,14 @@ def setOperations(path, op):
             key = re.sub(r'MethodName$|ClassName$|ParameterName$|VariableName$|FieldName$', '', k)
             operations[commit][key] = o
     return operations
+'''
+def setOperations(path, op):
+    filePath = os.path.join(path, "operations.json")
+    operations = {}
+    with open(filePath, 'r') as f:
+        operations = json.load(f)[op]
+    return operations
+'''
 
 def getCommitsInfo(commit):
     #複数コミットの取り方
@@ -134,24 +126,25 @@ def checkMeaningful(operations):
         if op[0] == "format":
             if op[1][0] == "Plural":
                 return False
-    print(operations)
+    #print(operations)
     return True
 
-def researchSimilarity(commit, operations, renameInfo):
-    #調査体操となる複数コミットを取得
+def recommendCommit(commit, operations, renameInfo):
+    #調査対象となる複数コミットを取得
     researchCommits = getCommitsInfo(commit)
     opGroup = {}
+    deb = 0
 
     #operationごとにdicを作成する
     for c in researchCommits:
         if c not in renameInfo:
             continue
-        #print(commit)
         goldset = renameInfo[c]
         for rDic in goldset:
             key = getKey(rDic)
+            #Todo: fix extracting parameter or variable using AST
             if key not in operations[c]:
-                print(f"something wrong {key}")
+                print(f"something wrong with {key}")
                 continue
             ops = operations[c][key]
             for op in ops:
@@ -160,49 +153,102 @@ def researchSimilarity(commit, operations, renameInfo):
                     opGroup[str(op)] = []
                 opGroup[str(op)].append(rDic)
     
-    for k, renameDicts in opGroup.items():
-        if checkMeaningful([eval(k)]):
+    renameIdSet = set()
+    for i in opGroup.keys():
+        if checkMeaningful([eval(i)]):
             continue
-        getSimilarity(renameDicts)
+        num = len(opGroup[i])-1 if len(opGroup[i]) <= 10 else 9
+        sameRenameSetLength[num] += 1
+        if len(opGroup[i]) == 1:
+            continue
+        for o in opGroup[i]:
+            if getKey(o)+o["typeOfIdentifier"] not in renameIdSet:
+                renameIdSet.add(getKey(o)+o["typeOfIdentifier"])
+                researchTypeOfIdentifier[o["typeOfIdentifier"]] += 1
+            #else:
+                #print(o["oldname"], o["newname"])
 
-    return 
+    debSet = set()
+    for trigger in renameInfo[commit]:
+        # triggerを元にoperaion dicからrename情報を得る
+        triggerKey = getKey(trigger)
+        if triggerKey not in operations[commit]:
+            print(f"something wrong {triggerKey}")
+            continue
+        triggerOp = operations[commit][triggerKey]
+        if checkMeaningful(triggerOp):
+            continue
+        renames = []
+        rKeys = []
+        for op in triggerOp:
+            if str(op) not in opGroup:
+                print(f"something wrong {triggerKey}")
+                exit(1)
+            for rDic in opGroup[str(op)]:
+                if getKey(rDic) == triggerKey:
+                    continue
+                if getKey(rDic) in rKeys:
+                    continue
+                rKeys.append(getKey(rDic))
+                renames.append(rDic)
+        if len(renames) == 0:
+            continue
+        deb += 1
+        if triggerKey+trigger["typeOfIdentifier"] in debSet:
+            continue
+        debSet.add(triggerKey+trigger["typeOfIdentifier"])
 
-def getSimilarity(renameDicts):
-    for i in range(len(renameDicts)):
-        for k in range(i+1, len(renameDicts)):
-            aNameNormalize = renameDicts[i]["normalized"]
-            bNameNormalize = renameDicts[k]["normalized"]
-            print(f"{aNameNormalize} : {bNameNormalize} = {wordSimilarity(aNameNormalize, bNameNormalize)}")
-            SIMILARITIES.append(wordSimilarity(aNameNormalize, bNameNormalize))
+    '''
+    if len(renameIdSet) == 1:
+        return len(renameIdSet), deb
 
-def wordSimilarity(aNormalize, bNormalize):
-    similarity = len(set(aNormalize) & set(bNormalize)) * 2 / (len(aNormalize) + len(bNormalize))
+    if len(renameIdSet) != deb:
+        for i in renameInfo[commit]:
+            print(i["oldname"], i["newname"], operations[commit][getKey(i)], i["typeOfIdentifier"])
+        print(list(i for i in opGroup.keys() if len(opGroup[i]) >= 1))
+        print(len(renameIdSet), deb, len(debSet))
+        exit(1)
+    '''
+
+
     
-    return similarity
+    return len(renameIdSet), deb
+    
+            
+            
+
+
 
 def getRelationData(renameData, relation):
     if not isinstance(renameData[relation], str):
         return []
     return renameData[relation].split(" - ")
 
+
 if __name__ ==  "__main__":
     args = setArgument()
-    setLogger(INFO)
-    setGitlog(args.source)
-    evalSimilarityPath = os.path.join(args.source, 'similarity')
-    if not os.path.isdir(evalSimilarityPath):
-        os.mkdir(evalSimilarityPath)
+    setLogger(INFO)    
+    renameCount = 0
+    deb = 0
+    researchTypeOfIdentifier = {i:0 for i in ["ParameterName", "ClassName", "MethodName", "VariableName", "FieldName"]}
+    #すべてのjson Fileを読み込む(recommend_relation_normalize.json)
+    for repo in args.source:
+        commitData = setGitlog(repo)
+        for fileName, op in researchFileNames.items():
+            operations = setOperations(repo, "all")
+            recommendName, renameInfo = setRename(repo, fileName)
 
-    operations = setOperations(args.source, "all")
-    recommendName, renameInfo = setRename(args.source, "recommend_all_normalize.json")
+            for commit in renameInfo.keys():
+                if commit not in commitData:
+                    continue
+                r, d = recommendCommit(commit, operations, renameInfo)
+                renameCount += r
+                deb += d
 
-    for commit in renameInfo.keys():
-        if commit not in commitToDate:
-            continue
-        researchSimilarity(commit, operations, renameInfo)
-    #print(SIMILARITIES)
-    similarityPath = os.path.join(evalSimilarityPath, 'similarity.csv')
 
-    with open(similarityPath, 'w') as sCSV:
-        w = csv.writer(sCSV)
-        w.writerow(SIMILARITIES)
+
+print(renameCount, researchTypeOfIdentifier, sameRenameSetLength)
+c = 0
+for i in range(1, 10):
+    c += sameRenameSetLength[i]
+print(deb, c)

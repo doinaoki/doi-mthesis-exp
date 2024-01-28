@@ -397,11 +397,11 @@ def getExactMatch(renames, recommendation, indexes):
     for idx in indexes:
         trueNewName = renames[idx[0]]['newname']
         recommendNewName = recommendation[idx[1]]['join']
-        _logger.debug(f'true name [{trueNewName}], recommended name [{recommendNewName}]')
+        #_logger.debug(f'true name [{trueNewName}], recommended name [{recommendNewName}]')
         #print(f'true name [{trueNewName}], recommended name [{recommendNewName}]')
         if trueNewName == recommendNewName:
             result.append(idx)
-    _logger.debug(f'exact matches: {result}')
+    #_logger.debug(f'exact matches: {result}')
     return result
 
 def getRelationData(renameData, relation):
