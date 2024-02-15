@@ -23,7 +23,7 @@ import pandas as pd
 from .util.Name import KgExpanderSplitter
 from .util.Rename import Rename
 import statistics
-'''
+
 _logger = getLogger(__name__)
 
 def setArgument():
@@ -33,31 +33,35 @@ def setArgument():
     args = parser.parse_args()
     return args
 
-similarityRecommend = np.array([0.484487986,0.625223649,0.17763514134615685,0.45577113202362024,0.620759483641038])
-relationRecommend = np.array([0.519168647, 0.692355771, 0.20848483890952374, 0.48251721643393886, 0.6101030927341484])
-allRecommend = np.array([0.536724229, 0.714280916, 0.21908170720380346, 0.4985627557210174, 0.6319131091941322])
+allRecommend = np.array([0.381, 0.594, 0.357])
+NoneRecommend = np.array([0.190, 0.914, 0.241])
+RelationRecommend = np.array([0.240, 0.412, 0.217])
+RenasRecommend = np.array([0.27, 0.428, 0.210])
 args = setArgument()
 fig, ax = plt.subplots()
-bar_width = 0.25
+bar_width = 0.40
 alpha = 0.8
-index = np.array([i+1 for i in range(5)])
+index = np.array([i*2+1 for i in range(3)])
 
-gpoint = np.arange(0, 0.8, 0.1)
-plt.hlines(gpoint, 0.8, 6, linewidth=0.1, colors='gray')
+gpoint = np.arange(0, 0.9, 0.1)
+#plt.hlines(gpoint, 0.8, 6, linewidth=0.02, colors='gray')
 
-plt.bar(index, similarityRecommend, bar_width,
+plt.bar(index, NoneRecommend, bar_width,
 alpha=alpha,color='green')
 
-plt.bar(index + bar_width, relationRecommend, bar_width,
+plt.bar(index + bar_width, RelationRecommend, bar_width,
 alpha=alpha,color='pink')
 
-plt.bar(index + bar_width*2, allRecommend, bar_width,
+plt.bar(index + bar_width*2, RenasRecommend, bar_width,
 alpha=alpha,color='gold')
 
-plt.ylabel('ratio')
-plt.xticks(index + bar_width, ["MAP", "MRR", "top1", "top5", "top10"])
+plt.bar(index + bar_width*3, allRecommend, bar_width,
+alpha=alpha,color='blue')
 
-plt.savefig(os.path.join(args.source, "figure", "showRQ.png"), pad_inches = 0)
+plt.ylabel('ratio')
+plt.xticks(index + bar_width*1.5, ["Precision", "Recall", "Fscore"])
+
+plt.savefig(os.path.join(args.source, "showRQ.svg"), pad_inches = 0)
 
 '''
 
@@ -87,4 +91,4 @@ for dir in dirs:
     shutil.rmtree(repoPath)
     c += 1
 
-
+'''

@@ -96,7 +96,7 @@ def registerValue(repo):
 
 
 def showCostFigure(path, fileLength):
-    colors = ["red", "green", "gold"]
+    colors = ["black", "black", "black"]
     columns = ["Precision", "Recall", "Fscore"]
     leftValue = np.array([i / thresholdNumber for i in range(thresholdNumber + 1)])
 
@@ -134,12 +134,12 @@ def caluculateCostValues(fileLength, path):
     left = [i for i in ratio]
     fig, ax = plt.subplots()
 
-    p1 = plt.plot(left, list(maxFscoreList.values()), color='b')
+    p1 = plt.plot(left, list(maxFscoreList.values()), color='black')
     #p1 = ax.bar(left, list(maxFscoreList.values()), color='b')
     #ax.bar_label(p1, label_type='edge')
     plt.xlabel('α')
     plt.ylabel('Fscore')
-    plt.savefig(os.path.join(path, 'costBar.pdf'))  
+    plt.savefig(os.path.join(path, 'costBar.svg'))  
     #plt.show()
 
 def showMAPMRRFigure(fileLength, path):
@@ -156,9 +156,9 @@ def showMAPMRRFigure(fileLength, path):
     maxValue = valueMAPList[maxIndex]
     #print(maxIndex / len(ratio), maxValue)
     plt.plot(maxIndex / (len(ratio) - 1), maxValue, '.', markersize=7, color='r')
-    plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
+    #plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
     #plt.ylim(0, max(valueMAPList)+0.08)
-    fig.savefig(os.path.join(path, 'mergeMAP.pdf'))
+    fig.savefig(os.path.join(path, 'mergeMAP.svg'))
     plt.close(fig) 
 
     #MRR
@@ -170,9 +170,9 @@ def showMAPMRRFigure(fileLength, path):
     maxValue = valueMRRList[maxIndex]
     #print(maxIndex / len(ratio), maxValue)
     plt.plot(maxIndex / (len(ratio) - 1), maxValue, '.', markersize=7, color='r')
-    plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
+    #plt.text(maxIndex / (len(ratio) - 1), maxValue, round(maxValue, 3))
     #plt.ylim(0, max(valueMRRList)+0.08)
-    fig.savefig(os.path.join(path, 'mergeMRR.pdf'))
+    fig.savefig(os.path.join(path, 'mergeMRR.svg'))
     plt.close(fig)  
 
 def showTopNFigure(fileLength, path):
@@ -250,13 +250,13 @@ if __name__ == '__main__':
     for repo in mainArgs.source:
         registerValue(repo)
 
-    resultPath =  pathlib.Path(mainArgs.source[0]).parent.joinpath("RQ2Merge")
+    resultPath =  pathlib.Path(mainArgs.source[0]).parent.joinpath("randomMerge")
     if not os.path.isdir(resultPath):
         os.makedirs(resultPath, exist_ok=True)
     fileLength = len(mainArgs.source)
-    #showCostFigure(resultPath, fileLength)
-    #caluculateCostValues(fileLength, resultPath)
-    #showMAPMRRFigure(fileLength, resultPath)
+    showCostFigure(resultPath, fileLength)
+    caluculateCostValues(fileLength, resultPath)
+    showMAPMRRFigure(fileLength, resultPath)
     showTopNFigure(fileLength, resultPath)
     print([(i, v / fileLength) for i, v in MERGE_MAP.items()])
     print([(i, v / fileLength) for i, v in MERGE_MRR.items()])

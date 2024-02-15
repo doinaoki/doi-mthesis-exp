@@ -67,7 +67,7 @@ def showSimilarityFigure(path, similarityData):
     plt.hist(bin[:-1], bin, weights=counts*width)
     plt.xlabel('類似度')
     plt.ylabel('相対度数')
-    plt.savefig(os.path.join(path, "similarity.pdf"))
+    plt.savefig(os.path.join(path, "similarity.svg"))
 
     '''
     freq = sData.value_counts(bins=bins, sort=False)
