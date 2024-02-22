@@ -23,7 +23,7 @@ import pandas as pd
 from .util.Name import KgExpanderSplitter
 from .util.Rename import Rename
 import statistics
-
+'''
 _logger = getLogger(__name__)
 
 def setArgument():
@@ -91,4 +91,4 @@ for dir in dirs:
     shutil.rmtree(repoPath)
     c += 1
 
-'''
+

@@ -19,6 +19,9 @@ from .util.Rename import Rename
 
 gitRe = re.compile(r'(?:^commit)\s+(.+)\nAuthor:\s+(.+)\nDate:\s+(.+)\n', re.MULTILINE)
 COMMIT = set()
+# ここを変えると出力されるより細かくファイルを分けてrefactoring
+RATIO = 3
+_logger = getLogger(__name__)
 
 def setArgument():
     parser = argparse.ArgumentParser()
@@ -26,6 +29,17 @@ def setArgument():
     parser.add_argument('-D', help='dry run (only check how many archives will be created)', action='store_true', default=False)
     args = parser.parse_args()
     return args
+
+def setLogger(level):
+    _logger.setLevel(level)
+    root_logger = getLogger()
+    handler = StreamHandler()
+    handler.setLevel(level)
+    formatter = Formatter('[%(asctime)s] %(name)s -- %(levelname)s : %(message)s')
+    handler.setFormatter(formatter)
+    root_logger.addHandler(handler)
+    root_logger.setLevel(INFO)
+    return root_logger
 
 def setGitlog(path):
     repoPath = os.path.join(path, "repo")
@@ -52,6 +66,8 @@ def doRefactoringMiner(commit, repoPath, RefactoringDict):
         return
     RefactoringDict['commits'] += json.loads(refactoring)['commits']
 
+
+
 if __name__ == "__main__":
     args = setArgument()
 
@@ -60,33 +76,32 @@ if __name__ == "__main__":
     setGitlog(root)
     repoPath = root.joinpath('repo')
     if not os.path.exists(repoPath):
-        print("error: repo is not existed")
+        _logger.error("error: repo is not existed")
         exit(1)
-    # ここを変えると出力されるより細かくファイルを分けてrefactoring
-    ratio = 3
+
     commitLength = len(COMMIT)
-    for rMinerNumber in range(ratio):
+    for rMinerNumber in range(RATIO):
         count = 0
         jsonPath = root.joinpath(f'result{rMinerNumber}.json')
         RefactoringDict = {"commits": []}
         for c in COMMIT:
             count += 1
-            if count < (commitLength * rMinerNumber / ratio) or count >= (commitLength * (rMinerNumber+1) / ratio) :
+            if count < (commitLength * rMinerNumber / RATIO) or count >= (commitLength * (rMinerNumber+1) / RATIO) :
                 continue
-            print(f'{count} / {int(commitLength * (rMinerNumber+1) / ratio)}')
-            print(f'start RefactoringMiner: commit={c}')
+            _logger.info(f'{count} / {int(commitLength * (rMinerNumber+1) / RATIO)}')
+            _logger.info(f'start RefactoringMiner: commit={c}')
             doRefactoringMiner(c, repoPath, RefactoringDict)
-            print(f'end RefactoringMiner: commit={c}')
+            _logger.info(f'end RefactoringMiner: commit={c}')
         with open(jsonPath, 'w') as jp:
             simplejson.dump(RefactoringDict, jp, indent=4, ignore_nan=True)
-        print(f'{rMinerNumber+1} / {ratio} is done')
+        _logger.info(f'{rMinerNumber+1} / {RATIO} is done')
+
 
     #全ての結果を統合
-
-    print(f'start merging refactoring')
+    _logger.info(f'start merging refactoring')
     allResult = {"commits": []}
     allJsonPath = root.joinpath('result.json')
-    for i in range(ratio):
+    for i in range(RATIO):
         jsonPath = root.joinpath(f'result{i}.json')
         with open(jsonPath, 'r') as jp:
             renames = json.load(jp)
@@ -94,36 +109,5 @@ if __name__ == "__main__":
 
     with open(allJsonPath, 'w') as ajp:
         simplejson.dump(allResult, ajp, indent=4, ignore_nan=True)
-    print(f'finish merging refactoring')
+    _logger.info(f'finish merging refactoring')
 
-
-
-'''
-if __name__ == "__main__":
-    args = setArgument()
-
-    root = pathlib.Path(args.source)
-
-    setGitlog(root)
-    jsonPath = root.joinpath('result.json')
-    repoPath = root.joinpath('repo')
-    if not os.path.exists(repoPath):
-        print("error: repo is not existed")
-        exit(1)
-    count = 0
-    ratio = 2
-    rMinerNumber = 1
-    commitLength = len(COMMIT)
-    for c in COMMIT:
-        count += 1
-        if count < (commitLength * rMinerNumber / ratio) or count >= (commitLength * (rMinerNumber+1) / ratio) :
-            continue
-        print(f'{count} / {int(commitLength * (rMinerNumber+1) / ratio)}')
-        if count == 58581:
-            continue
-        print(f'start RefactoringMiner: commit={c}')
-        doRefactoringMiner(c, repoPath)
-        print(f'end RefactoringMiner: commit={c}')
-    with open(jsonPath, 'w') as jp:
-        simplejson.dump(RefactoringDict, jp, indent=4, ignore_nan=True)
-'''

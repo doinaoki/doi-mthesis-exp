@@ -399,10 +399,7 @@ if __name__ ==  "__main__":
             #tablePath = os.path.join(args.source, "archives", commit, "exTable.csv.gz")
             #tableData = ExTable(tablePath)
             tableData = None
-            if fileName == "recommend_none.json":
-                countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, float(fileName))
-            else:
-                countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, float(fileName))
+            countRename, countRec, countTrue, setCount = recommendCommit(commit, tableData, operations, recommendName, renameInfo, op, float(fileName))
             allRename += countRename
             allRec += countRec
             allTrue += countTrue

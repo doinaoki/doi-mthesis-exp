@@ -69,27 +69,6 @@ def showSimilarityFigure(path, similarityData):
     plt.ylabel('相対度数')
     plt.savefig(os.path.join(path, "similarity.svg"))
 
-    '''
-    freq = sData.value_counts(bins=bins, sort=False)
-    print(freq)
-    class_value = np.array([0.1, 0.3, 0.5, 0.7, 0.9]) # 階級値
-    rel_freq = freq / sData.count()  # 相対度数
-    cum_freq = freq.cumsum()  # 累積度数
-    rel_cum_freq = rel_freq.cumsum()  # 相対累積度数
-    fig, ax1 = plt.subplots()
-    dist = pd.DataFrame(
-    {
-        "class": class_value,
-        "frequency": freq,
-        "relative frequency": rel_freq,
-        "累積度数": cum_freq,
-        "相対累積度数": rel_cum_freq,
-    },
-    index=freq.index
-    )
-    dist.plot.bar(x="class", y="relative frequency", tick_label=class_value,ax=ax1, width=1, ec="k")
-    plt.savefig(os.path.join(path, "similarity.png"))
-    '''
 
 if __name__ == '__main__':
     mainArgs = setArgument()

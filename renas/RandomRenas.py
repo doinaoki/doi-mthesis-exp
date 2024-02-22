@@ -22,9 +22,9 @@ _RELATION_LIST = [
 _IDENTIFIER_LIST = ["id","name","line","files","typeOfIdentifier","split","case","pattern","delimiter"]
 _RELATION_COST = {
     "subclass": 3.0,
-    "subsubclass": 4.0,
+    "subsubclass": 3.0,
     "parents": 3.0,
-    "ancestor": 4.0,
+    "ancestor": 3.0,
     "methods": 4.0,
     "fields": 4.0,
     "siblings": 1.0,
@@ -39,13 +39,6 @@ _RELATION_COST = {
     "argument": 2.0, 
     "parameterOverload": 1.0
 }
-ratio = [i/20 for i in range(0, 21)]
-RANK = 50
-RANK_DISTANSE_PENALTY = 1
-RANK_WORD_PENALTY = 4
-RANK_FILE_PENALTY = 1
-UPPER = 10000
-UPPER_RANKING = 20
 RELATION_TIMES = 1
 SIMILARITY_TIMES = 1
 
@@ -120,7 +113,6 @@ def recordOperation(commit, op,normalize, all, exception={}):
         operationDic[opType][commit] = {}
     operationDic[opType][commit][commit+op[0]] = op[1]
 
-
 # トリガーとなるRenameを設定.(operational chunkの抽出)
 def doCoRename(commit, tableData, trigger, relation, similarity, all):
     _logger.info(f'do co-rename relation = {relation}, similarity = {similarity}')
@@ -143,7 +135,6 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
     heapq.heappush(nextIds, [triggerScore, startHop, triggerData["id"]])  
     result = []
     trueRecommend = 0
-    trueRecommendScore = RANK
 
     # 4:30
     while len(nextIds) > 0:
@@ -170,12 +161,11 @@ def coRenameRelation(tableData, triggerData, triggerRename, isRelation, isSimila
             if recommended is not None:
                 if isSimilarity:
                     recommendScore = nextScore + (recommended["similarity"] * SIMILARITY_TIMES)
-                if recommendScore <= trueRecommendScore or trueRecommend < UPPER_RANKING:
-                    recommended['relationship'] = nextScore
-                    recommended['rank'] = recommendScore
-                    recommended['hop'] = hop
-                    result.append(recommended)
-                    trueRecommend += 1
+                recommended['relationship'] = nextScore
+                recommended['rank'] = recommendScore
+                recommended['hop'] = hop
+                result.append(recommended)
+                trueRecommend += 1
 
 
         #次に調べるべきidを格納 0.0007  change  14.90  6040
@@ -232,7 +222,7 @@ def recommend(repo, force):
     resultAllNormalize = {}
     outputSimilarity = root.joinpath('recommend_similarity_ranking_random.json')
     outputRelation = root.joinpath('recommend_relation_ranking_random.json')
-    outputAllNormalize = root.joinpath(f'recommend_all_normalize_random.json')
+    outputAllNormalize = root.joinpath(f'recommend_all_normalize.json')
     outputOperation = root.joinpath('operations.json')
 
     #既に作られている場合終了
